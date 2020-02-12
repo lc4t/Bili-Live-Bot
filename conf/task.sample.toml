@@ -1,0 +1,72 @@
+[global_task_arrangement]  # task 参与的控制，注意⚠对于动态实物这些，必须要 ctrl.toml 开启之后（那里是管理轮询的总开关），才会生效
+# {task_name}指join_dyn_raffle、join_dyn_raffle 这些（不得随意修改名字，不得随意删除），目前下面罗列的就是全部了！！！！
+# 平均概率筛选： probability_{task_name} = 0.7   这种表示0.7的概率会参加风暴，剩余会丢弃，如果不存在这种 probability_{task_name}，即表示百分之百参与
+# 每日次数筛选： {task_name} = 0   -1 表示一天内无限制次数；0 表示一直不会参与； 正整数表示一天内最大参与次数，超过就会暴力丢弃
+# 具体逻辑为，如果存在 probability_{task_name}，按照概率筛选，否则百分之百通过概率筛选。如果通过概率筛选。再查看 {task_name} 是否有次数筛选，如果超过了，就不执行
+join_dyn_raffle = -1  # 动态 dyn_raffle_handler.py
+join_guard_raffle = -1  # 舰队 guard_raffle_handler.py
+join_storm_raffle = 0  # 风暴 storm_raffle_handler.py
+join_substance_raffle = -1  # 实物 substance_raffle_handler.py
+join_tv_raffle = -1  # 小电视 tv_raffle_handler.py
+join_pk_raffle = -1  # PK pk_raffle_handler.py
+
+heartbeat = -1  # 直播心跳 live_daily_job.py
+recv_heart_gift = -1  # 心跳礼物 live_daily_job.py
+open_silver_box = -1  # 直播宝箱 live_daily_job.py
+recv_daily_bag = -1  # 每日礼包 live_daily_job.py
+sign = -1  # 直播签到  live_daily_job.py
+watch_tv = -1  # 双端观看任务 live_daily_job.py
+sign_fans_group = -1  # 应援团签到 live_daily_job.py
+send_gift = -1  # 勋章赠送礼物、赠送即将过期的礼物 live_daily_job.py
+exchange_silver_coin = -1  # 每日瓜子硬币兑换 live_daily_job.py
+
+judge_case = -1  # 风纪委 main_daily_job.py
+bili_main = -1  # 主站每日任务，投币、分享、观看、登录 main_daily_job.py
+
+
+
+[custom_task_arrangement]  # 与global_task_arrangement对应。针对某个具体用户的自定义(如果用户没有自定义的部分，就使用前面global那里的配置)
+    [custom_task_arrangement.username]  # sub-table({'custom_task_arrangement': {'user0': {}, 'user1': {}}})，name与user.toml内的相同
+    join_storm_raffle = -1
+    probability_join_storm_raffle = 0.7
+
+
+
+[global_task_control]  # 具体的task细节控制，注意⚠必须要task_arrangement开启之后，才会生效
+# 清理即将过期礼物，请true之后一定要把紧随其后的clean-expiring-gift2room设置为真实房间号
+clean-expiring-gift = false
+# 单位秒，这是控制定义过期礼物何时为“过期”的阈值
+set-expiring-time = 0
+# 对过期礼物是否优先投递到其他勋章(按照勋章等级由大到小顺序投递)，之后会剩余的清理掉至clean-expiring-gift2room
+clean_expiring_gift2all_medal = false
+clean-expiring-gift2room = 0
+
+# 一天最多一个硬币兑换机会
+silver2coin = false
+
+# 投满正在佩戴的勋章当日亲密度
+send2wearing-medal = false
+# 投满勋章当日亲密度（填写目标的 UID 号，投递按照填写的顺序投递）
+# ⚠此处与 send2wearing-medal 不相干。如果只想投正在佩戴的勋章，不需要额外填写此处；此处仅用于投递其他未正在佩戴的勋章
+send2medal_by_uid = []
+
+# 输入数字 0-5 表示主站每日自动投币
+givecoin = 0
+# 数字表示投币最大尝试次数(如果根据up主投币的话，很可能最后发现硬币满了，投不动了，这是就需要限制尝试次数，否则会死循环)
+givecoin_max_try_times = 25
+# av获取(bilitop或者uper)分别代表b站随机或者根据up主mid选取
+fetchrule = "bilitop"
+# up主list([123]或者[123, 234, 123]等)
+mid = [ 207539637,]
+
+# 抽奖@的人，格式为 uid = "用户名"（例如 {332704117 = "白上吹雪Official", 339567211 = "赤井心Official"}）
+# 要求被@的人不能经常改名字，这样也就说明这些用户也可控，即不得随意骚扰他人
+dyn_lottery_friends = {}
+
+
+
+[custom_task_control]  # 与global_task_control对应。针对某个具体用户的自定义(如果用户没有自定义的部分，就使用前面global那里的配置)
+    [custom_task_control.username]  # sub-table({'custom_task_control': {'user0': {}, 'user1': {}}})，name与user.toml内的相同
+    givecoin = 5
+    [custom_task_control."xxx.qq.com"]  # 用户名如果包含.这个特殊符号需要使用双引号括起来，这里xx.qq.com就是username
+    givecoin = 5

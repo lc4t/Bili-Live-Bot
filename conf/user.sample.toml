@@ -1,0 +1,20 @@
+[[users]]
+username = ""
+password = ""
+alias = ""
+access_key = ""
+cookie = ""
+csrf = ""
+uid = ""
+refresh_token = ""
+manage_room = []
+# 定时循环发送
+alerts = []
+# 循环时间间隔
+alert_second = 200
+# 礼物连送等待
+gift_comb_delay = 3
+# 送礼感谢格式
+gift_thx_format = "感谢{username}投喂的{giftname}x{num}"
+# 关注感谢格式
+focus_thx_format = "谢谢{username}的关注"

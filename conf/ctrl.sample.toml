@@ -1,0 +1,29 @@
+[print_control]  # 打印
+# 控制default_monitor_roomid所指认的room弹幕打印(pythonista ios可以彩打哦)
+danmu = false
+
+
+
+[other_control]  # 其他细节控制
+# 默认监听房间号(用于打印弹幕功能等)
+default_monitor_roomid = 2339900
+
+# https://github.com/yjqiang/YjMonitor
+# yj协同监控自定义中心服务器模式, key为空字符串时不启动,例如: tcp://127.0.0.1:8002
+yjmonitor_tcp_addr = ''
+yjmonitor_tcp_key = ''
+
+# 由于有时b站会在弹幕重连过程中推送会导致遗漏，如果true，会暴力对一个分区同时开两个房间来保证大幅度减少遗漏推送
+area_duplicated = false
+
+# 表示休眠区间，为空表示不休眠
+# 时间格式举例 sleep_ranges = [[08:00:00, 09:03:00], [14:04:00, 14:46:00]] ，24小时制，不得省略写0或省略秒数或加空格
+sleep_ranges = []
+
+# 实物抽奖开关
+substance_raffle = false
+
+# 动态抽奖开关
+dyn_raffle = false
+# 立刻参与的话，暴力搜索到就参与；否则就等到快开始抽奖了，才会参与
+join_dyn_raffle_at_once = false
