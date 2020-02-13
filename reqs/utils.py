@@ -238,6 +238,12 @@ class UtilsReq:
         return json_rsp
 
     @staticmethod
+    async def get_user_follower(user, uid):
+        url = f'https://api.bilibili.com/x/relation/followers?vmid={uid}&pn=1&ps=50&order=desc&jsonp=jsonp&callback='
+        json_rsp = await user.other_session.request_json('GET', url, headers=user.dict_bili['pcheaders'])
+        return json_rsp
+
+    @staticmethod
     async def move2follow_group(user, uid, group_id):
         url = 'https://api.bilibili.com/x/relation/tags/addUsers?cross_domain=true'
         headers = {

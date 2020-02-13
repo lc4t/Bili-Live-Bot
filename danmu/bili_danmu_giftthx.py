@@ -48,25 +48,28 @@ class DanmuGiftThx(WsDanmuClient):
         fans_already = set()
         now = int(time.time())
         while(1):
-            json_rsp = await self.user.req_s(UtilsReq.get_user_follower, self.user, uid)
-            # print(json_rsp)
-            fans = json_rsp.get('data', {}).get('list', [])
-            for u in fans:
-                mid = u.get('mid', 0)
-                mtime = u.get('mtime', 0)
-                uname = u.get('uname', '')
-                if uname and mid and mtime:
-                    if mtime < now:
-                        continue
-                    if mid in fans_already:
-                        continue
-                    await self.send_danmu(self.user.focus_thx_format.format(username=uname,
-                                                                            random1=random.choice(
-                                                                                self.user.random_list_1),
-                                                                            random2=random.choice(
-                                                                                self.user.random_list_2),
-                                                                            random3=random.choice(self.user.random_list_3)))
-                    fans_already.add(mid)
+            try:
+                json_rsp = await self.user.req_s(UtilsReq.get_user_follower, self.user, uid)
+                # print(json_rsp)
+                fans = json_rsp.get('data', {}).get('list', [])
+                for u in fans:
+                    mid = u.get('mid', 0)
+                    mtime = u.get('mtime', 0)
+                    uname = u.get('uname', '')
+                    if uname and mid and mtime:
+                        if mtime < now:
+                            continue
+                        if mid in fans_already:
+                            continue
+                        await self.send_danmu(self.user.focus_thx_format.format(username=uname,
+                                                                                random1=random.choice(
+                                                                                    self.user.random_list_1),
+                                                                                random2=random.choice(
+                                                                                    self.user.random_list_2),
+                                                                                random3=random.choice(self.user.random_list_3)))
+                        fans_already.add(mid)
+            except:
+                traceback.print_exc()
             await asyncio.sleep(3)
 
     async def run_sender(self):
