@@ -33,7 +33,7 @@ class DanmuGiftThx(WsDanmuClient):
                 await self.send_danmu(text)
                 now += 1
             else:
-                print(f'未开播, {datetime.datetime.now()}')
+                print(f'{self._room_id}未开播, {datetime.datetime.now()}')
             await asyncio.sleep(self.user.alert_second)
 
     async def run_fans(self):
