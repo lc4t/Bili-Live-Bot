@@ -15,6 +15,7 @@ class User:
     _ids = count(0)
     __slots__ = (
         'id', 'force_sleep', 'name', 'password', 'manage_room', 'alerts', 'gift_comb_delay', 'alert_second', 'gift_thx_format', 'focus_thx_format', 'alias', 'task_ctrl',
+        'danmu_length', 'random_list_1', 'random_list_2', 'random_list_3',
         'task_arrangement', 'is_in_jail',
 
         'bililive_session', 'login_session', 'other_session',
@@ -37,6 +38,17 @@ class User:
         self.alert_second = dict_user['alert_second']
         self.gift_thx_format = dict_user['gift_thx_format']
         self.focus_thx_format = dict_user['focus_thx_format']
+        self.danmu_length = dict_user.get('danmu_length', 30)
+        self.random_list_1 = dict_user.get('random_list_1', [])
+        self.random_list_2 = dict_user.get('random_list_2', [])
+        self.random_list_3 = dict_user.get('random_list_3', [])
+        if len(self.random_list_1) == 0:
+            self.random_list_1 = [""]
+        if len(self.random_list_2) == 0:
+            self.random_list_2 = [""]
+        if len(self.random_list_3) == 0:
+            self.random_list_3 = [""]
+
         self.task_ctrl = task_ctrl
         self.task_arrangement = task_arrangement
         self.is_in_jail = False  # 是否小黑屋

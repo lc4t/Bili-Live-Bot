@@ -8,13 +8,25 @@ csrf = ""
 uid = ""
 refresh_token = ""
 manage_room = []
-# 定时循环发送
+danmu_length = 30 # 弹幕长度
+# 定时循环发送, 在alerts内循环
 alerts = []
-# 循环时间间隔
-alert_second = 200
+# 循环时间间隔,开播才发广告
+alert_second = 300
 # 礼物连送等待
-gift_comb_delay = 3
+gift_comb_delay = 5
 # 送礼感谢格式
 gift_thx_format = "感谢{username}投喂的{giftname}x{num}"
 # 关注感谢格式
 focus_thx_format = "谢谢{username}的关注"
+
+
+# 随机替换列表，使用标识符可以作为变量取其中的随机值
+# 变量名称为{random1} {random2} {ramdom3}
+# 举个例子
+# random_list_1 = ["小电视","节奏风暴"]
+# gift_thx_format = "谢谢{username}投喂的{num}个{giftname}, 浅浅还想吃许多{random1}"
+
+random_list_1 = []
+random_list_2 = []
+random_list_3 = []

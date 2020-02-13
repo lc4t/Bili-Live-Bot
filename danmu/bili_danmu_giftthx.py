@@ -59,7 +59,12 @@ class DanmuGiftThx(WsDanmuClient):
                         continue
                     if mid in fans_already:
                         continue
-                    await self.send_danmu(self.user.focus_thx_format.format(username=uname))
+                    await self.send_danmu(self.user.focus_thx_format.format(username=uname,
+                                                                            random1=random.choice(
+                                                                                self.user.random_list_1),
+                                                                            random2=random.choice(
+                                                                                self.user.random_list_2),
+                                                                            random3=random.choice(self.user.random_list_3)))
                     fans_already.add(mid)
             await asyncio.sleep(3)
 
@@ -106,12 +111,20 @@ class DanmuGiftThx(WsDanmuClient):
                     if gift_num == 0:
                         continue
                     if time.time() - info.get('t') > self.user.gift_comb_delay:
-                        await self.send_danmu(self.user.gift_thx_format.format(username=username, num=gift_num, giftname=gift_name))
+                        await self.send_danmu(self.user.gift_thx_format.format(username=username,
+                                                                               num=gift_num,
+                                                                               giftname=gift_name,
+                                                                               random1=random.choice(
+                                                                                   self.user.random_list_1),
+                                                                               random2=random.choice(
+                                                                                   self.user.random_list_2),
+                                                                               random3=random.choice(self.user.random_list_3)))
                         wait_to_send_danmu[username][gift_name].update({'gift_num': 0})
             await asyncio.sleep(1)
 
     async def send_danmu(self, text, default_length=30):
         # print('try:', text, len(text))
+        default_length = self.user.danmu_length
         msg = text[0:default_length]
         json_rsp = await self.user.req_s(UtilsReq.send_danmu, self.user, msg, self._room_id)
         print(json_rsp)
