@@ -20,7 +20,8 @@ gift_thx_format = "感谢{username}投喂的{giftname}x{num}"
 # 关注感谢格式
 focus_thx_format = "谢谢{username}的关注"
 
-
+medal_update_format = "恭喜{username}的牌牌升到LV{new_level}!"
+medal_update_check_delay = 60
 # 随机替换列表，使用标识符可以作为变量取其中的随机值
 # 变量名称为{random1} {random2} {ramdom3}
 # 举个例子

@@ -16,6 +16,7 @@ class User:
     __slots__ = (
         'id', 'force_sleep', 'name', 'password', 'manage_room', 'alerts', 'gift_comb_delay', 'alert_second', 'gift_thx_format', 'focus_thx_format', 'alias', 'task_ctrl',
         'danmu_length', 'random_list_1', 'random_list_2', 'random_list_3',
+        'medal_update_format', 'medal_update_check_delay',
         'task_arrangement', 'is_in_jail',
 
         'bililive_session', 'login_session', 'other_session',
@@ -39,6 +40,8 @@ class User:
         self.gift_thx_format = dict_user['gift_thx_format']
         self.focus_thx_format = dict_user['focus_thx_format']
         self.danmu_length = dict_user.get('danmu_length', 30)
+        self.medal_update_format = dict_user.get('medal_update_format', '')
+        self.medal_update_check_delay = dict_user.get('medal_update_check_delay', 30)
         self.random_list_1 = dict_user.get('random_list_1', [])
         self.random_list_2 = dict_user.get('random_list_2', [])
         self.random_list_3 = dict_user.get('random_list_3', [])
