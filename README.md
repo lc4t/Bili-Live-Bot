@@ -11,7 +11,8 @@
 5. 礼物连送等待 `gift_comb_delay = 3`, 避免连送导致多条感谢
 6. 送礼感谢格式 `gift_thx_format = "感谢{username}投喂的{giftname}x{num}"` 大括号里面的是替换变量
 7. 关注感谢格式 `focus_thx_format = "谢谢{username}的关注"`
-
+8. 粉丝牌子升级(只能统计前50)`medal_update_format = "恭喜{username}的牌牌升到LV{new_level}!"`
+9. 粉丝牌子检查周期`medal_update_check_delay = 60`
 
 ## 代码中默认配置
 
