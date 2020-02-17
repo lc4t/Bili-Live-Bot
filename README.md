@@ -19,3 +19,12 @@
 文件 `danmu/bili_danmu_giftthx.py`
 
 1. 默认弹幕长度为30，修改字段为`default_length=30` (一般用户30级就有30长度了，因此不在配置中提供)
+
+
+## 赞助和协议
+
+1. 新功能一律提issue
+2. 允许使用本代码在淘宝等商家提供代挂服务
+3. 接受赞助
+
+[donate.jpg](donate.jpg)
