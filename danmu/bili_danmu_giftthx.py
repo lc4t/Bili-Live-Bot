@@ -18,6 +18,10 @@ class DanmuGiftThx(WsDanmuClient):
     def set_user(self, user):
         self.user = user
         self.GIFT_QUEUE = queue.Queue()
+        self.pk_end_time = -1
+        self.pk_me_votes = 0
+        self.pk_op_votes = 0
+        self.pk_now_use = 0
         print(f'已关联用户{self.user.alias} -> {self._room_id}')
 
     async def run_alter(self):
@@ -127,6 +131,7 @@ class DanmuGiftThx(WsDanmuClient):
             await asyncio.sleep(1)
 
     async def send_danmu(self, text, default_length=30):
+        return
         # print('try:', text, len(text))
         default_length = self.user.danmu_length
         msg = text[0:default_length]
@@ -138,6 +143,44 @@ class DanmuGiftThx(WsDanmuClient):
         if len(text) > default_length:
             await asyncio.sleep(1)
             await self.send_danmu(text[default_length:], default_length)
+
+    async def pk_bd(self):
+        # PK偷塔
+        json_rsp = await self.user.req_s(UtilsReq.get_room_info, self.user, self._room_id)
+        ruid = json_rsp.get('data', {}).get('uid', 0)
+
+        if ruid == 0:
+            print('获取uid失败，重启或检查房间号')
+            return
+        # 笔芯 20014
+        # await asyncio.sleep(3)
+
+        while(1):
+            try:
+                if self.pk_end_time > time.time():
+                    print(
+                        f'PK还有{self.pk_end_time - time.time()}s结束, 分差{self.pk_op_votes-self.pk_me_votes}')
+                    if self.pk_end_time - time.time() < 3 and self.pk_op_votes - self.pk_me_votes >= 0:
+                        print(f'开启偷塔, 时限{self.pk_end_time - time.time()}')
+                        print(f'当前分差{self.pk_op_votes-self.pk_me_votes}')
+                        if self.pk_op_votes - self.pk_me_votes > self.user.pk_max_votes or self.pk_now_use > self.user.pk_max_votes:
+                            print(self.pk_op_votes - self.pk_me_votes,
+                                  self.user.pk_max_votes, self.pk_now_use, self.user.pk_max_votes)
+                            continue
+                        need = ((self.pk_op_votes-self.pk_me_votes)/52)+1
+                        gift_id = 20014  # 这个礼物是52分
+                        gift_num = need
+                        print(UtilsReq.send_gold, self.user, gift_id, gift_num, self._room_id, ruid)
+                        json_rsp = await self.user.req_s(UtilsReq.send_gold, self.user, gift_id, gift_num, self._room_id, ruid)
+                        # status = json_rsp.get('data', {}).get('live_status')
+                        print(json_rsp)
+                        self.pk_now_use += 52*need
+                        # continue
+                        await asyncio.sleep(0.1)
+            except:
+                traceback.print_exc()
+
+            await asyncio.sleep(0.25)
 
     async def handle_danmu(self, data: dict):
         cmd = data['cmd']
@@ -170,6 +213,75 @@ class DanmuGiftThx(WsDanmuClient):
                 gift_name = data['data']['gift_name']
                 gift_num = data['data']['num']
                 await self.send_danmu(self.user.gift_thx_format.format(username=username, num=gift_num, giftname=gift_name))
+
+            elif cmd == 'PK_BATTLE_START':
+                # print(data)
+                self.pk_now_use = 0
+                self.pk_me_votes = 0
+                self.pk_op_votes = 0
+
+                pk_id = data.get('pk_id')
+                t = data.get('timestamp')
+                self.pk_end_time = data.get('data').get('pk_end_time') - 10
+
+            elif cmd == 'PK_BATTLE_PROCESS':
+                # print(data)
+                pk_id = data.get('pk_id')
+                t = data.get('timestamp')
+                # data = data.get('data')
+
+                init_info = data.get('data').get('init_info')
+                match_info = data.get('data').get('match_info')
+
+                if init_info.get('room_id') != self._room_id:
+                    # 交换
+                    init_info, match_info = match_info, init_info
+
+                if init_info.get('room_id') == self._room_id:
+                    me_roomid, self.pk_me_votes, me_best = init_info.get(
+                        'room_id'), init_info.get('votes'), init_info.get('best_uname')
+                    op_roomid, self.pk_op_votes, op_best = match_info.get(
+                        'room_id'), match_info.get('votes'), match_info.get('best_uname')
+                    print(f'和对方差距{self.pk_op_votes-self.pk_me_votes}分')
+                else:
+                    print('error获取pk信息:')
+                    print(data)
+
+            elif cmd == 'PK_BATTLE_END':
+                # print(data)
+                self.pk_now_use = 0
+
+                pk_id = data.get('pk_id')
+                t = data.get('timestamp')
+
+                init_info = data.get('data').get('init_info')
+                match_info = data.get('data').get('match_info')
+
+                if init_info.get('room_id') != self._room_id:
+                    # 交换
+                    init_info, match_info = match_info, init_info
+
+                if init_info.get('room_id') == self._room_id:
+                    me_roomid, self.pk_me_votes, me_best, me_win = init_info.get(
+                        'room_id'), init_info.get('votes'), init_info.get('best_uname'), init_info.get('winner_type')
+                    op_roomid, self.pk_op_votes, op_best, op_win = match_info.get('room_id'), match_info.get(
+                        'votes'), match_info.get('best_uname'), match_info.get('winner_type')
+                    print(f'结束了，与对方分差{self.pk_op_votes-self.pk_me_votes}分，最佳应援{me_best}')
+                    self.pk_end_time = -1
+                else:
+                    print('error获取pk信息:')
+                    print(data)
+            elif cmd == 'PK_BATTLE_PRO_TYPE':
+                # print(data)
+                print('绝杀')
+                t = data.get('timestamp')
+                delay = data.get('data').get('timer')
+                self.pk_end_time = t + delay
+
+            # 绝杀
+            # {'cmd': 'PK_BATTLE_PRO_TYPE', 'pk_id': 748548, 'pk_status': 301, 'timestamp': 1582007539, 'data': {'timer': 60, 'final_hit_room_id': 3232493, 'be_final_hit_room_id': 21668541}}
+            # 结束报告
+            # {'cmd': 'PK_BATTLE_SETTLE_USER', 'pk_id': 748548, 'pk_status': 501, 'settle_status': 1, 'timestamp': 1582007599, 'data': {'pk_id': '748548', 'settle_status': 1, 'result_type': '3', 'battle_type': 0, 'result_info': {'total_score': 11, 'result_type_score': 10, 'pk_votes': 57052, 'pk_votes_name': '战力值', 'pk_crit_score': -1, 'pk_resist_crit_score': -1, 'pk_extra_score_slot': '每日20:00 ~ 23:00 ', 'pk_extra_value': 11410, 'pk_extra_score': 1, 'pk_task_score': 0, 'pk_times_score': 0, 'pk_done_times': 5, 'pk_total_times': 8, 'win_count': 1, 'win_final_hit': 1, 'winner_count_score': 0, 'task_score_list': []}, 'winner': {'room_id': 3232493, 'uid': 12461919, 'uname': '糕妹睡不醒', 'face': 'http://i1.hdslb.com/bfs/face/3a5ddcef155c9f5e5854e5d5b011aae17018576c.jpg', 'face_frame': '', 'exp': {'color': 5805790, 'user_level': 21, 'master_level': {'color': 10512625, 'level': 25}}, 'best_user': {'uid': 16821173, 'uname': '_饮马江湖风萧萧', 'face': 'http://i0.hdslb.com/bfs/face/00eaecb6da45fa072ff0cdef25a1f9d6fbc0571b.jpg', 'pk_votes': 57000, 'pk_votes_name': '战力值', 'exp': {'color': 6406234, 'level': 5}, 'face_frame': 'http://i0.hdslb.com/bfs/live/78e8a800e97403f1137c0c1b5029648c390be390.png', 'badge': {'url': 'http://i0.hdslb.com/bfs/live/b5e9ebd5ddb979a482421ca4ea2f8c1cc593370b.png', 'desc': '', 'position': 3}, 'award_info': None, 'award_info_list': [{'type': 1, 'bar_num': 4, 'bar_total': '6', 'get_status': 0, 'title': '每6次可获得', 'award_name': '时光沙漏', 'award_url': 'http://s1.hdslb.com/bfs/live/0898535576c195dd8b0c43c52a77276efb2a9aa1.png', 'num': 1, 'msg': '成为胜方最佳助攻6次可获得1枚', 'tips': '大乱斗中投喂可使主播本场免疫绝杀'}], 'end_win_award_info_list': {'list': []}}}, 'my_info': {'room_id': 3232493, 'uid': 12461919, 'uname': '糕妹睡不醒', 'face': 'http://i1.hdslb.com/bfs/face/3a5ddcef155c9f5e5854e5d5b011aae17018576c.jpg', 'face_frame': '', 'exp': {'color': 5805790, 'user_level': 21, 'master_level': {'color': 10512625, 'level': 25}}, 'best_user': {'uid': 16821173, 'uname': '_饮马江湖风萧萧', 'face': 'http://i0.hdslb.com/bfs/face/00eaecb6da45fa072ff0cdef25a1f9d6fbc0571b.jpg', 'pk_votes': 57000, 'pk_votes_name': '战力值', 'exp': {'color': 6406234, 'level': 5}, 'face_frame': 'http://i0.hdslb.com/bfs/live/78e8a800e97403f1137c0c1b5029648c390be390.png', 'badge': {'url': 'http://i0.hdslb.com/bfs/live/b5e9ebd5ddb979a482421ca4ea2f8c1cc593370b.png', 'desc': '', 'position': 3}, 'award_info': None, 'award_info_list': [{'type': 1, 'bar_num': 4, 'bar_total': '6', 'get_status': 0, 'title': '每6次可获得', 'award_name': '时光沙漏', 'award_url': 'http://s1.hdslb.com/bfs/live/0898535576c195dd8b0c43c52a77276efb2a9aa1.png', 'num': 1, 'msg': '成为胜方最佳助攻6次可获得1枚', 'tips': '大乱斗中投喂可使主播本场免疫绝杀'}], 'end_win_award_info_list': {'list': []}}}, 'level_info': {'first_rank_name': '小天才', 'second_rank_num': 2, 'first_rank_img': 'https://i0.hdslb.com/bfs/live/2eb2ffcc0c0a26d33ef2261c4ece5c9160ebcee0.png', 'second_rank_icon': 'https://i0.hdslb.com/bfs/live/a02cc5ae3c1dffe65c8a278075c542d7d495facb.png'}}}
 
             elif cmd in ['WELCOME_GUARD', 'WELCOME', 'NOTICE_MSG', 'SYS_GIFT', 'ACTIVITY_BANNER_UPDATE_BLS', 'ENTRY_EFFECT', 'ROOM_RANK', 'ACTIVITY_BANNER_UPDATE_V2', 'COMBO_END', 'ROOM_REAL_TIME_MESSAGE_UPDATE', 'ROOM_BLOCK_MSG', 'WISH_BOTTLE', 'WEEK_STAR_CLOCK', 'ROOM_BOX_MASTER', 'HOUR_RANK_AWARDS', 'ROOM_SKIN_MSG', 'RAFFLE_START', 'RAFFLE_END', 'GUARD_LOTTERY_START', 'GUARD_LOTTERY_END', 'GUARD_MSG', 'USER_TOAST_MSG', 'SYS_MSG', 'COMBO_SEND', 'ROOM_BOX_USER', 'TV_START', 'TV_END', 'ANCHOR_LOT_END', 'ANCHOR_LOT_AWARD', 'ANCHOR_LOT_CHECKSTATUS', 'ANCHOR_LOT_STAR', 'ROOM_CHANGE', 'LIVE', 'new_anchor_reward', 'room_admin_entrance', 'ROOM_ADMINS', 'PREPARING']:
                 pass

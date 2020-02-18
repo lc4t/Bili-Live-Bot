@@ -187,6 +187,7 @@ tasks += [manager.run() for manager in danmu_manager]
 tasks += [s.run_sender() for s in danmu_manager]
 tasks += [s.run_alter() for s in danmu_manager]
 tasks += [s.run_fans() for s in danmu_manager]
+tasks += [s.pk_bd() for s in danmu_manager]
 
 
 other_tasks = [

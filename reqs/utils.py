@@ -1,7 +1,7 @@
 # 不具有任何意义,仅仅是常见func
 
 from random import randint
-
+import time
 from bili_global import API_LIVE
 import utils
 from json_rsp_ctrl import ZERO_ONLY_CTRL, LOGOUT_101_CTRL
@@ -72,6 +72,31 @@ class UtilsReq:
             'metadata': '',
             'price': '0',
             'csrf_token': user.dict_bili['csrf']
+        }
+        json_rsp = await user.bililive_session.request_json('POST', url, headers=user.dict_bili['pcheaders'], data=data)
+        return json_rsp
+
+    @staticmethod
+    async def send_gold(user, gift_id, gift_num, room_id, ruid):
+        # 金瓜子
+        url = f'{API_LIVE}/gift/v2/Live/send'
+        data = {
+            'uid': user.dict_bili['uid'],
+            'gift_id': gift_id,
+            'ruid': ruid,  # 收到uid
+            'send_ruid': 0,
+            'gift_num': gift_num,
+            'coin_type': 'gold',
+            'bag_id': 0,
+            'platform': 'pc',
+            'biz_code': 'live',
+            'biz_id': room_id,
+            'rnd': int(time.time()),
+            'storm_beat_id': 0,
+            'metadata': '',
+            'price': 0,
+            'csrf_token': user.dict_bili['csrf'],
+            'csrf': user.dict_bili['csrf']
         }
         json_rsp = await user.bililive_session.request_json('POST', url, headers=user.dict_bili['pcheaders'], data=data)
         return json_rsp
