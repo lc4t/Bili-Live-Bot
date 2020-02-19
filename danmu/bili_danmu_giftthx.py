@@ -158,29 +158,30 @@ class DanmuGiftThx(WsDanmuClient):
         while(1):
             try:
                 if self.pk_end_time > time.time():
-                    print(
-                        f'PK还有{self.pk_end_time - time.time()}s结束, 分差{self.pk_op_votes-self.pk_me_votes}')
+                    # print(
+                    #     f'PK还有{self.pk_end_time - time.time()}s结束, 分差{self.pk_op_votes-self.pk_me_votes}')
                     if self.pk_end_time - time.time() < 3 and self.pk_op_votes - self.pk_me_votes >= 0:
                         print(f'开启偷塔, 时限{self.pk_end_time - time.time()}')
                         print(f'当前分差{self.pk_op_votes-self.pk_me_votes}')
                         if self.pk_op_votes - self.pk_me_votes > self.user.pk_max_votes or self.pk_now_use > self.user.pk_max_votes:
-                            print(self.pk_op_votes - self.pk_me_votes,
+                            print('超额了', self.pk_op_votes - self.pk_me_votes,
                                   self.user.pk_max_votes, self.pk_now_use, self.user.pk_max_votes)
                             continue
                         need = ((self.pk_op_votes-self.pk_me_votes)/52)+1
                         gift_id = 20014  # 这个礼物是52分
                         gift_num = need
-                        print(UtilsReq.send_gold, self.user, gift_id, gift_num, self._room_id, ruid)
+                        print(f'准备赠送{need}个吃瓜')
+                        # print(UtilsReq.send_gold, self.user, gift_id, gift_num, self._room_id, ruid)
                         json_rsp = await self.user.req_s(UtilsReq.send_gold, self.user, gift_id, gift_num, self._room_id, ruid)
                         # status = json_rsp.get('data', {}).get('live_status')
                         print(json_rsp)
                         self.pk_now_use += 52*need
                         # continue
-                        await asyncio.sleep(0.1)
+                        # await asyncio.sleep(0.1)
             except:
                 traceback.print_exc()
 
-            await asyncio.sleep(0.25)
+            await asyncio.sleep(0.1)
 
     async def handle_danmu(self, data: dict):
         cmd = data['cmd']
