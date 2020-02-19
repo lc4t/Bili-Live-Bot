@@ -167,10 +167,10 @@ class DanmuGiftThx(WsDanmuClient):
                             print('超额了', self.pk_op_votes - self.pk_me_votes,
                                   self.user.pk_max_votes, self.pk_now_use, self.user.pk_max_votes)
                             continue
-                        need = ((self.pk_op_votes-self.pk_me_votes)/52)+1
-                        gift_id = 20014  # 这个礼物是52分
+                        need = ((self.pk_op_votes-self.pk_me_votes)/self.user.pk_gift_rank)+1
+                        gift_id = self.user.pk_gift_id  # 这个礼物是52分 20014
                         gift_num = need
-                        print(f'准备赠送{need}个吃瓜')
+                        print(f'准备赠送{need}个{self.user.pk_gift_id}')
                         # print(UtilsReq.send_gold, self.user, gift_id, gift_num, self._room_id, ruid)
                         json_rsp = await self.user.req_s(UtilsReq.send_gold, self.user, gift_id, gift_num, self._room_id, ruid)
                         # status = json_rsp.get('data', {}).get('live_status')
@@ -189,9 +189,9 @@ class DanmuGiftThx(WsDanmuClient):
         try:
             if cmd == 'DANMU_MSG':
                 flag = data['info'][0][9]
-                if flag == 0:
-                    print(
-                        f"{data['info'][2][1]}({data['info'][2][0]})在{self._room_id}: {data['info'][1]}")
+                # if flag == 0:
+                #     print(
+                #         f"{data['info'][2][1]}({data['info'][2][0]})在{self._room_id}: {data['info'][1]}")
             elif cmd == 'SEND_GIFT':
                 room_id = self._room_id
                 user_id = data['data']['uid']

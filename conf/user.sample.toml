@@ -20,6 +20,9 @@ gift_thx_format = "感谢{username}投喂的{giftname}x{num}"
 # 关注感谢格式
 focus_thx_format = "谢谢{username}的关注"
 
+pk_max_votes = 2000
+pk_gift_id = 20014 # 比心
+pk_gift_rank = 52 # 比心是52分
 
 # 随机替换列表，使用标识符可以作为变量取其中的随机值
 # 变量名称为{random1} {random2} {ramdom3}
