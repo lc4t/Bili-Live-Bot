@@ -2,6 +2,7 @@ from .bili_danmu import WsDanmuClient
 import asyncio
 import traceback
 import json
+import copy
 import datetime
 import random
 import time
@@ -36,6 +37,60 @@ class DanmuGiftThx(WsDanmuClient):
             else:
                 print(f'{self._room_id}未开播, {datetime.datetime.now()}')
             await asyncio.sleep(self.user.alert_second)
+
+    async def run_medal_update(self):
+        json_rsp = await self.user.req_s(UtilsReq.get_room_info, self.user, self._room_id)
+        uid = json_rsp.get('data', {}).get('uid', 0)
+
+        if uid == 0:
+            print('获取uid失败，重启或检查房间号')
+            return
+
+        if not self.user.medal_update_format:
+            print('medal_update_format未定义，勋章升级提醒关闭')
+            return
+
+        async def get_medals():
+            medal_data = {}
+            json_rsp = await self.user.req_s(UtilsReq.get_room_medal, self.user, self._room_id, uid, 1)
+            total_page = json_rsp.get('data', {}).get('total_page', 1)
+            medal_data.update({x.get('uid'): {'level': x.get('level'), 'uname': x.get('uname')}
+                               for x in json_rsp.get('data', {}).get('list', [])})
+            if total_page > 1:
+                for p in range(2, total_page+1):
+                    json_rsp = await self.user.req_s(UtilsReq.get_room_medal, self.user, self._room_id, uid, p)
+                    medal_data.update({x.get('uid'): {'level': x.get('level'), 'uname': x.get(
+                        'uname')} for x in json_rsp.get('data', {}).get('list', [])})
+            return medal_data
+
+        medal_rank_already = await get_medals()
+
+        while(1):
+            try:
+                medal_rank = copy.deepcopy(await get_medals())
+                # print(f'already={medal_rank_already}')
+                # print(f'new={medal_rank}')
+                for mid, info in medal_rank.items():
+                    if mid not in medal_rank_already:
+                        # 牌子新获取
+                        uname = medal_rank[mid].get('uname')
+                        new_level = medal_rank[mid].get('level')
+                        old_level = 0
+                        await self.send_danmu(self.user.medal_update_format.format(username=uname, uid=mid, new_level=new_level, old_level=old_level))
+                    elif mid in medal_rank_already and info.get('level', 0) > medal_rank_already[mid].get('level', 0):
+                        # 牌子升级
+                        uname = medal_rank[mid].get('uname')
+                        new_level = medal_rank[mid].get('level')
+                        old_level = medal_rank_already[mid].get('level', 0)
+
+                        await self.send_danmu(self.user.medal_update_format.format(username=uname, uid=mid, new_level=new_level, old_level=old_level))
+                    else:
+                        pass
+                medal_rank_already = copy.deepcopy(medal_rank)
+
+            except:
+                traceback.print_exc()
+            await asyncio.sleep(self.user.medal_update_check_delay)
 
     async def run_fans(self):
         # 获取uid

@@ -19,6 +19,12 @@ class UtilsReq:
         return rsp
 
     @staticmethod
+    async def get_room_medal(user, room_id, uid, page=1):
+        url = f'https://api.live.bilibili.com/rankdb/v2/RoomRank/mobileMedalRank?roomid={room_id}&ruid={uid}&page={page}'
+        json_rsp = await user.other_session.request_json('GET', url, headers=user.dict_bili['pcheaders'], ctrl=LOGOUT_101_CTRL)
+        return json_rsp
+
+    @staticmethod
     async def post_watching_history(user, room_id):
         data = {
             "room_id": room_id,
