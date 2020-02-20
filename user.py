@@ -18,6 +18,7 @@ class User:
         'danmu_length', 'random_list_1', 'random_list_2', 'random_list_3',
         'medal_update_format', 'medal_update_check_delay',
         'task_arrangement', 'is_in_jail',
+        'guard_thx_format', 'fans_check_delay', 'only_live_thx',
 
         'bililive_session', 'login_session', 'other_session',
 
@@ -39,9 +40,14 @@ class User:
         self.alert_second = dict_user['alert_second']
         self.gift_thx_format = dict_user['gift_thx_format']
         self.focus_thx_format = dict_user['focus_thx_format']
+        self.guard_thx_format = dict_user.get('guard_thx_format', self.gift_thx_format)
         self.danmu_length = dict_user.get('danmu_length', 30)
         self.medal_update_format = dict_user.get('medal_update_format', '')
         self.medal_update_check_delay = dict_user.get('medal_update_check_delay', 30)
+        self.only_live_thx = dict_user.get('only_live_thx', False)
+
+        self.fans_check_delay = dict_user.get('fans_check_delay', 20)
+
         self.random_list_1 = dict_user.get('random_list_1', [])
         self.random_list_2 = dict_user.get('random_list_2', [])
         self.random_list_3 = dict_user.get('random_list_3', [])

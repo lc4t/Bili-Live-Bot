@@ -19,8 +19,16 @@ gift_comb_delay = 5
 gift_thx_format = "感谢{username}投喂的{giftname}x{num}"
 # 关注感谢格式
 focus_thx_format = "谢谢{username}的关注"
+# 上船感谢
+guard_thx_format = "感谢{username}投喂的{giftname}x{num}"
+# 是否仅开播时答谢
+only_live_thx = false
+# 新关注判定延迟
+fans_check_delay = 30
 
+# 粉丝勋章升级提醒
 medal_update_format = "恭喜{username}的牌牌升到LV{new_level}!"
+# 粉丝勋章检测延迟
 medal_update_check_delay = 60
 # 随机替换列表，使用标识符可以作为变量取其中的随机值
 # 变量名称为{random1} {random2} {ramdom3}

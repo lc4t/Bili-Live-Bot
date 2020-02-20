@@ -16,10 +16,18 @@ class DanmuGiftThx(WsDanmuClient):
     # GIFT_MSG = '谢谢可爱的{username}投喂{giftname}x{num} (╭￣3￣)╭♡'
     # DELAY_SECOND = 3
 
-    def set_user(self, user):
+    async def set_user(self, user):
         self.user = user
         self.GIFT_QUEUE = queue.Queue()
+        self.is_live = False
         print(f'已关联用户{self.user.alias} -> {self._room_id}')
+        await self._is_alive()
+
+    async def _is_alive(self):
+        json_rsp = await self.user.req_s(UtilsReq.init_room, self.user, self._room_id)
+        status = json_rsp.get('data', {}).get('live_status')
+        self.is_live = status == 1
+        return self.is_live
 
     async def run_alter(self):
         if len(self.user.alerts) == 0:
@@ -28,9 +36,7 @@ class DanmuGiftThx(WsDanmuClient):
         now = 0
 
         while(1):
-            json_rsp = await self.user.req_s(UtilsReq.init_room, self.user, self._room_id)
-            status = json_rsp.get('data', {}).get('live_status')
-            if status == 1:
+            if self.is_live:
                 text = self.user.alerts[now % len(self.user.alerts)]
                 await self.send_danmu(text)
                 now += 1
@@ -125,7 +131,7 @@ class DanmuGiftThx(WsDanmuClient):
                         fans_already.add(mid)
             except:
                 traceback.print_exc()
-            await asyncio.sleep(3)
+            await asyncio.sleep(self.user.fans_check_delay)
 
     async def run_sender(self):
         roomid = self._room_id
@@ -170,19 +176,20 @@ class DanmuGiftThx(WsDanmuClient):
                     if gift_num == 0:
                         continue
                     if time.time() - info.get('t') > self.user.gift_comb_delay:
-                        await self.send_danmu(self.user.gift_thx_format.format(username=username,
-                                                                               num=gift_num,
-                                                                               giftname=gift_name,
-                                                                               random1=random.choice(
-                                                                                   self.user.random_list_1),
-                                                                               random2=random.choice(
-                                                                                   self.user.random_list_2),
-                                                                               random3=random.choice(self.user.random_list_3)))
+                        if self.is_live or (not self.user.only_live_thx):
+                            await self.send_danmu(self.user.gift_thx_format.format(username=username,
+                                                                                   num=gift_num,
+                                                                                   giftname=gift_name,
+                                                                                   random1=random.choice(
+                                                                                       self.user.random_list_1),
+                                                                                   random2=random.choice(
+                                                                                       self.user.random_list_2),
+                                                                                   random3=random.choice(self.user.random_list_3)))
                         wait_to_send_danmu[username][gift_name].update({'gift_num': 0})
+
             await asyncio.sleep(1)
 
     async def send_danmu(self, text, default_length=30):
-        # print('try:', text, len(text))
         default_length = self.user.danmu_length
         msg = text[0:default_length]
         json_rsp = await self.user.req_s(UtilsReq.send_danmu, self.user, msg, self._room_id)
@@ -224,10 +231,27 @@ class DanmuGiftThx(WsDanmuClient):
                 username = data['data']['username']
                 gift_name = data['data']['gift_name']
                 gift_num = data['data']['num']
-                await self.send_danmu(self.user.gift_thx_format.format(username=username, num=gift_num, giftname=gift_name))
+                if self.is_live or (not self.user.only_live_thx):
+                    await self.send_danmu(self.user.gift_thx_format.format(username=username, num=gift_num, giftname=gift_name))
 
-            elif cmd in ['WELCOME_GUARD', 'WELCOME', 'NOTICE_MSG', 'SYS_GIFT', 'ACTIVITY_BANNER_UPDATE_BLS', 'ENTRY_EFFECT', 'ROOM_RANK', 'ACTIVITY_BANNER_UPDATE_V2', 'COMBO_END', 'ROOM_REAL_TIME_MESSAGE_UPDATE', 'ROOM_BLOCK_MSG', 'WISH_BOTTLE', 'WEEK_STAR_CLOCK', 'ROOM_BOX_MASTER', 'HOUR_RANK_AWARDS', 'ROOM_SKIN_MSG', 'RAFFLE_START', 'RAFFLE_END', 'GUARD_LOTTERY_START', 'GUARD_LOTTERY_END', 'GUARD_MSG', 'USER_TOAST_MSG', 'SYS_MSG', 'COMBO_SEND', 'ROOM_BOX_USER', 'TV_START', 'TV_END', 'ANCHOR_LOT_END', 'ANCHOR_LOT_AWARD', 'ANCHOR_LOT_CHECKSTATUS', 'ANCHOR_LOT_STAR', 'ROOM_CHANGE', 'LIVE', 'new_anchor_reward', 'room_admin_entrance', 'ROOM_ADMINS', 'PREPARING']:
+            elif cmd in ['WELCOME_GUARD', 'WELCOME', 'NOTICE_MSG', 'SYS_GIFT',
+                         'ACTIVITY_BANNER_UPDATE_BLS', 'ENTRY_EFFECT', 'ROOM_RANK',
+                         'ACTIVITY_BANNER_UPDATE_V2', 'COMBO_END', 'ROOM_REAL_TIME_MESSAGE_UPDATE',
+                         'ROOM_BLOCK_MSG', 'WISH_BOTTLE', 'WEEK_STAR_CLOCK', 'ROOM_BOX_MASTER',
+                         'HOUR_RANK_AWARDS', 'ROOM_SKIN_MSG', 'RAFFLE_START', 'RAFFLE_END',
+                         'GUARD_LOTTERY_START', 'GUARD_LOTTERY_END', 'GUARD_MSG',
+                         'USER_TOAST_MSG', 'SYS_MSG', 'COMBO_SEND', 'ROOM_BOX_USER',
+                         'TV_START', 'TV_END', 'ANCHOR_LOT_END', 'ANCHOR_LOT_AWARD',
+                         'ANCHOR_LOT_CHECKSTATUS', 'ANCHOR_LOT_STAR', 'ROOM_CHANGE',
+                         'LIVE', 'new_anchor_reward', 'room_admin_entrance', 'ROOM_ADMINS',
+                         'PREPARING']:
                 pass
+            elif cmd in ['LIVE']:
+                print(f'开播 {self._room_id}')
+                self.is_live = True
+            elif cmd in ['PREPARING']:
+                print(f'下播 {self._room_id}')
+                self.is_live = False
             elif cmd.startswith('PK_'):
                 pass
             else:
