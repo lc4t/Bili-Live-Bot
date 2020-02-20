@@ -160,12 +160,12 @@ class DanmuGiftThx(WsDanmuClient):
                 if self.pk_end_time > time.time():
                     # print(
                     #     f'PK还有{self.pk_end_time - time.time()}s结束, 分差{self.pk_op_votes-self.pk_me_votes}')
-                    if self.pk_end_time - time.time() < 3 and self.pk_op_votes - self.pk_me_votes >= 0:
-                        print(f'开启偷塔, 时限{self.pk_end_time - time.time()}')
-                        print(f'当前分差{self.pk_op_votes-self.pk_me_votes}')
+                    if self.pk_end_time - time.time() < 1 and self.pk_op_votes - self.pk_me_votes >= 0:
+                        # print(f'开启偷塔, 时限{self.pk_end_time - time.time()}')
+                        # print(f'当前分差{self.pk_op_votes-self.pk_me_votes}')
                         if self.pk_op_votes - self.pk_me_votes > self.user.pk_max_votes or self.pk_now_use > self.user.pk_max_votes:
-                            print('超额了', self.pk_op_votes - self.pk_me_votes,
-                                  self.user.pk_max_votes, self.pk_now_use, self.user.pk_max_votes)
+                            # print('超额了', self.pk_op_votes - self.pk_me_votes,
+                            #       self.user.pk_max_votes, self.pk_now_use, self.user.pk_max_votes)
                             continue
                         need = ((self.pk_op_votes-self.pk_me_votes)/self.user.pk_gift_rank)+1
                         gift_id = self.user.pk_gift_id  # 这个礼物是52分 20014
@@ -216,7 +216,7 @@ class DanmuGiftThx(WsDanmuClient):
                 await self.send_danmu(self.user.gift_thx_format.format(username=username, num=gift_num, giftname=gift_name))
 
             elif cmd == 'PK_BATTLE_START':
-                # print(data)
+                print(data)
                 self.pk_now_use = 0
                 self.pk_me_votes = 0
                 self.pk_op_votes = 0
