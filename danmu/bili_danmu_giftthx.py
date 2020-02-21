@@ -10,6 +10,9 @@ from printer import info as print
 from reqs.utils import UtilsReq
 
 
+DELAY = 0
+
+
 class DanmuGiftThx(WsDanmuClient):
 
     # GIFT_MSG = '谢谢可爱的{username}投喂{giftname}x{num} (╭￣3￣)╭♡'
@@ -19,6 +22,7 @@ class DanmuGiftThx(WsDanmuClient):
         self.user = user
         self.GIFT_QUEUE = queue.Queue()
         self.pk_end_time = -1
+        self.end = True
         self.pk_me_votes = 0
         self.pk_op_votes = 0
         self.pk_now_use = 0
@@ -157,7 +161,7 @@ class DanmuGiftThx(WsDanmuClient):
 
         while(1):
             try:
-                if self.pk_end_time > time.time():
+                if self.pk_end_time > time.time() or not self.end:
                     # print(
                     #     f'PK还有{self.pk_end_time - time.time()}s结束, 分差{self.pk_op_votes-self.pk_me_votes}')
                     if self.pk_end_time - time.time() < 1 and self.pk_op_votes - self.pk_me_votes >= 0:
@@ -167,15 +171,16 @@ class DanmuGiftThx(WsDanmuClient):
                             # print('超额了', self.pk_op_votes - self.pk_me_votes,
                             #       self.user.pk_max_votes, self.pk_now_use, self.user.pk_max_votes)
                             continue
-                        need = ((self.pk_op_votes-self.pk_me_votes)/self.user.pk_gift_rank)+1
+                        need = ((self.pk_op_votes-self.pk_me_votes)/self.user.pk_gift_rank)+5
                         gift_id = self.user.pk_gift_id  # 这个礼物是52分 20014
                         gift_num = need
-                        print(f'准备赠送{need}个{self.user.pk_gift_id}')
+                        print(f'赠送{need}个{self.user.pk_gift_id}')
                         # print(UtilsReq.send_gold, self.user, gift_id, gift_num, self._room_id, ruid)
+                        self.pk_now_use += 52*need
                         json_rsp = await self.user.req_s(UtilsReq.send_gold, self.user, gift_id, gift_num, self._room_id, ruid)
                         # status = json_rsp.get('data', {}).get('live_status')
-                        print(json_rsp)
-                        self.pk_now_use += 52*need
+                        # print(json_rsp)
+
                         # continue
                         # await asyncio.sleep(0.1)
             except:
@@ -217,16 +222,18 @@ class DanmuGiftThx(WsDanmuClient):
 
             elif cmd == 'PK_BATTLE_START':
                 print(data)
+                self.end = False
                 self.pk_now_use = 0
                 self.pk_me_votes = 0
                 self.pk_op_votes = 0
 
                 pk_id = data.get('pk_id')
                 t = data.get('timestamp')
-                self.pk_end_time = data.get('data').get('pk_end_time') - 10
+                self.pk_end_time = data.get('data').get('pk_end_time') - 10 + DELAY
 
             elif cmd == 'PK_BATTLE_PROCESS':
                 # print(data)
+                self.end = False
                 pk_id = data.get('pk_id')
                 t = data.get('timestamp')
                 # data = data.get('data')
@@ -243,7 +250,8 @@ class DanmuGiftThx(WsDanmuClient):
                         'room_id'), init_info.get('votes'), init_info.get('best_uname')
                     op_roomid, self.pk_op_votes, op_best = match_info.get(
                         'room_id'), match_info.get('votes'), match_info.get('best_uname')
-                    print(f'和对方差距{self.pk_op_votes-self.pk_me_votes}分')
+                    print(
+                        f'和对方差距{self.pk_op_votes-self.pk_me_votes}分, {self.pk_end_time-time.time()}s后结束')
                 else:
                     print('error获取pk信息:')
                     print(data)
@@ -251,6 +259,7 @@ class DanmuGiftThx(WsDanmuClient):
             elif cmd == 'PK_BATTLE_END':
                 # print(data)
                 self.pk_now_use = 0
+                self.end = True
 
                 pk_id = data.get('pk_id')
                 t = data.get('timestamp')
@@ -272,12 +281,15 @@ class DanmuGiftThx(WsDanmuClient):
                 else:
                     print('error获取pk信息:')
                     print(data)
+            elif cmd in ['PK_BATTLE_SETTLE_USER', 'PK_BATTLE_SETTLE']:
+                self.end = True
+                print(data)
             elif cmd == 'PK_BATTLE_PRO_TYPE':
                 # print(data)
                 print('绝杀')
                 t = data.get('timestamp')
                 delay = data.get('data').get('timer')
-                self.pk_end_time = t + delay
+                self.pk_end_time = t + delay + DELAY
 
             # 绝杀
             # {'cmd': 'PK_BATTLE_PRO_TYPE', 'pk_id': 748548, 'pk_status': 301, 'timestamp': 1582007539, 'data': {'timer': 60, 'final_hit_room_id': 3232493, 'be_final_hit_room_id': 21668541}}
