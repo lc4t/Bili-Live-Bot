@@ -171,7 +171,7 @@ class DanmuGiftThx(WsDanmuClient):
                             # print('超额了', self.pk_op_votes - self.pk_me_votes,
                             #       self.user.pk_max_votes, self.pk_now_use, self.user.pk_max_votes)
                             continue
-                        need = ((self.pk_op_votes-self.pk_me_votes)/self.user.pk_gift_rank)+5
+                        need = ((self.pk_op_votes-self.pk_me_votes)/self.user.pk_gift_rank)+3
                         gift_id = self.user.pk_gift_id  # 这个礼物是52分 20014
                         gift_num = need
                         print(f'赠送{need}个{self.user.pk_gift_id}')

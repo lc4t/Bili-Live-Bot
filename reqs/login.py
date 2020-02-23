@@ -88,7 +88,7 @@ class LoginReq:
         params = user.sort_and_sign(extra_params)
         url = f'https://passport.bilibili.com/api/v2/oauth2/refresh_token'
         json_rsp = await user.login_session.request_json('POST', url, headers=user.dict_bili['appheaders'], params=params, ctrl=LOGIN_CTRL)
-        # print('json_rsp', json_rsp)
+        print('json_rsp', json_rsp)
         return json_rsp
 
     @staticmethod
