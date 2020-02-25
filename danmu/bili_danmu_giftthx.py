@@ -190,7 +190,6 @@ class DanmuGiftThx(WsDanmuClient):
 
     async def handle_danmu(self, data: dict):
         cmd = data['cmd']
-        # print(data)
         try:
             if cmd == 'DANMU_MSG':
                 flag = data['info'][0][9]
@@ -232,7 +231,6 @@ class DanmuGiftThx(WsDanmuClient):
                 self.pk_end_time = data.get('data').get('pk_end_time') - 10 + DELAY
 
             elif cmd == 'PK_BATTLE_PROCESS':
-                # print(data)
                 self.end = False
                 pk_id = data.get('pk_id')
                 t = data.get('timestamp')
@@ -257,7 +255,7 @@ class DanmuGiftThx(WsDanmuClient):
                     print(data)
 
             elif cmd == 'PK_BATTLE_END':
-                # print(data)
+                print(data)
                 self.pk_now_use = 0
                 self.end = True
 
@@ -285,7 +283,7 @@ class DanmuGiftThx(WsDanmuClient):
                 self.end = True
                 print(data)
             elif cmd == 'PK_BATTLE_PRO_TYPE':
-                # print(data)
+                print(data)
                 print('绝杀')
                 t = data.get('timestamp')
                 delay = data.get('data').get('timer')
