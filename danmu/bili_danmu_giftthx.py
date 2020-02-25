@@ -243,8 +243,7 @@ class DanmuGiftThx(WsDanmuClient):
                          'USER_TOAST_MSG', 'SYS_MSG', 'COMBO_SEND', 'ROOM_BOX_USER',
                          'TV_START', 'TV_END', 'ANCHOR_LOT_END', 'ANCHOR_LOT_AWARD',
                          'ANCHOR_LOT_CHECKSTATUS', 'ANCHOR_LOT_STAR', 'ROOM_CHANGE',
-                         'LIVE', 'new_anchor_reward', 'room_admin_entrance', 'ROOM_ADMINS',
-                         'PREPARING']:
+                         'new_anchor_reward', 'room_admin_entrance', 'ROOM_ADMINS']:
                 pass
             elif cmd in ['LIVE']:
                 print(f'开播 {self._room_id}')
