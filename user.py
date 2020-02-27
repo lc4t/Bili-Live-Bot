@@ -19,6 +19,9 @@ class User:
         'medal_update_format', 'medal_update_check_delay',
         'task_arrangement', 'is_in_jail',
         'guard_thx_format', 'fans_check_delay', 'only_live_thx',
+        'silver_gift_thx_format', 'gold_gift_thx_format',
+        'reply', 'ban',
+        'height', 'weight',
 
         'bililive_session', 'login_session', 'other_session',
 
@@ -38,13 +41,19 @@ class User:
         self.alerts = dict_user['alerts']
         self.gift_comb_delay = dict_user['gift_comb_delay']
         self.alert_second = dict_user['alert_second']
-        self.gift_thx_format = dict_user['gift_thx_format']
+        self.gift_thx_format = dict_user.get('gift_thx_format', '感谢{username}投喂的{giftname}x{num}')
+        self.silver_gift_thx_format = dict_user.get('silver_gift_thx_format', self.gift_thx_format)
+        self.gold_gift_thx_format = dict_user.get('gold_gift_thx_format', self.gift_thx_format)
         self.focus_thx_format = dict_user['focus_thx_format']
         self.guard_thx_format = dict_user.get('guard_thx_format', self.gift_thx_format)
         self.danmu_length = dict_user.get('danmu_length', 30)
         self.medal_update_format = dict_user.get('medal_update_format', '')
         self.medal_update_check_delay = dict_user.get('medal_update_check_delay', 30)
         self.only_live_thx = dict_user.get('only_live_thx', False)
+        self.reply = dict_user.get('reply', [])
+        self.ban = dict_user.get('ban', [])
+        self.height = dict_user.get('height', 0)
+        self.weight = dict_user.get('weight', 0)
 
         self.fans_check_delay = dict_user.get('fans_check_delay', 20)
 
@@ -94,6 +103,9 @@ class User:
                 self.dict_bili['pcheaders']['cookie'] = value
                 self.dict_bili['appheaders']['cookie'] = value
         conf_loader.write_user(login_data, self.id)
+
+    def update_log(self):
+        conf_loader.write_user({'weight': self.weight, 'height': self.height}, self.id)
 
     def is_online(self):
         return self.dict_bili['pcheaders']['cookie'] and self.dict_bili['appheaders']['cookie']

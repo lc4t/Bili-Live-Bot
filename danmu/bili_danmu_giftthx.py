@@ -6,9 +6,11 @@ import copy
 import datetime
 import random
 import time
+import re
 import queue
 from printer import info as print
 from reqs.utils import UtilsReq
+from reqs.custom import BanUserReq
 
 
 class DanmuGiftThx(WsDanmuClient):
@@ -152,39 +154,67 @@ class DanmuGiftThx(WsDanmuClient):
                 if gift_info.get('room') != roomid:
                     print('error room id')
                     exit(0)
-                username, gift_name, gift_num, t = gift_info.get('username'), gift_info.get(
-                    'gift_name'), gift_info.get('gift_num'), gift_info.get('t')
+                # 拿到单条礼物信息
+                username, gift_name, gift_num, t, coin_type, total_coin = gift_info.get('username'), gift_info.get(
+                    'gift_name'), gift_info.get('gift_num'), gift_info.get('t'),  gift_info.get('coin_type'), gift_info.get('total_coin')
+                # 以用户名为主键
                 if username not in wait_to_send_danmu:
                     wait_to_send_danmu[username] = {}    # 新建username
-                if gift_name not in wait_to_send_danmu.get(username):
+                # 礼物名为主键
+                if f'{gift_name}_{coin_type}' not in wait_to_send_danmu.get(username):
                     wait_to_send_danmu[username].update(
-                        {gift_name: {'gift_num': gift_num, 't': t}})   # username->gift_name
+                        {f'{gift_name}_{coin_type}': {
+                            'gift_num': gift_num,
+                            'coin_type': coin_type,
+                            'total_coin': total_coin,
+                            't': t,
+                        }})   # username->gift_name
                 else:
                     # 查找已经送了的有多少
                     already_num = wait_to_send_danmu[username].get(
-                        gift_name, {}).get('gift_num', 0)  # 已经送了的
-                    wait_to_send_danmu[username][gift_name].update(
-                        {'gift_num': gift_num + already_num, 't': t})  # 更新数量
+                        f'{gift_name}_{coin_type}', {}).get('gift_num', 0)  # 已经送了的
+                    already_total_coin = wait_to_send_danmu[username].get(
+                        f'{gift_name}_{coin_type}', {}).get('total_coin', 0)  # 已经送了的总价值
+
+                    wait_to_send_danmu[username][f'{gift_name}_{coin_type}'].update(
+                        {
+                            'gift_num': gift_num + already_num,
+                            't': t,
+                            'total_coin': total_coin+already_total_coin
+                        })  # 更新数量
 
             # print(wait_to_send_danmu)
 
             # 检查时间是否达到推出标准
             # 这里可以重写感谢弹幕
+
             for username, gifts in wait_to_send_danmu.items():
                 for gift_name, info in gifts.items():
                     gift_num = info.get('gift_num')
+                    coin_type = info.get('coin_type')
+                    total_coin = info.get('total_coin', 0)
+                    gift_name_true = gift_name.strip(f'_{coin_type}')
+                    fstr = ''
+                    if coin_type == 'silver':
+                        fstr = self.user.silver_gift_thx_format
+                    else:
+                        fstr = self.user.gold_gift_thx_format
                     if gift_num == 0:
                         continue
                     if time.time() - info.get('t') > self.user.gift_comb_delay:
                         if self.is_live or (not self.user.only_live_thx):
-                            await self.send_danmu(self.user.gift_thx_format.format(username=username,
-                                                                                   num=gift_num,
-                                                                                   giftname=gift_name,
-                                                                                   random1=random.choice(
-                                                                                       self.user.random_list_1),
-                                                                                   random2=random.choice(
-                                                                                       self.user.random_list_2),
-                                                                                   random3=random.choice(self.user.random_list_3)))
+
+                            # self.user.gift_thx_silver_format
+                            await self.send_danmu(fstr.format(username=username,
+                                                              num=gift_num,
+                                                              total_coin=total_coin,
+                                                              giftname=gift_name_true,
+                                                              random1=random.choice(
+                                                                  self.user.random_list_1),
+                                                              random2=random.choice(
+                                                                  self.user.random_list_2),
+                                                              random3=random.choice(self.user.random_list_3)))
+                            await self.game_log(coin_type, total_coin)
                         wait_to_send_danmu[username][gift_name].update({'gift_num': 0})
 
             await asyncio.sleep(1)
@@ -201,15 +231,83 @@ class DanmuGiftThx(WsDanmuClient):
             await asyncio.sleep(1)
             await self.send_danmu(text[default_length:], default_length)
 
+    async def game_log(self, coin_type, total_coin):
+        if coin_type == 'silver':
+            self.user.height += total_coin
+        elif coin_type == 'gold':
+            self.user.weight += total_coin
+        else:
+            print(f'unknow {coin_type} {total_coin}')
+        self.user.update_log()
+
+    async def get_gamestr(self):
+        weight, height = '', ''
+        if self.user.weight < 10**3:
+            weight = '%dmg' % self.user.weight
+        elif 10**3 <= self.user.weight < 10**6:
+            weight = '%.3fg' % self.user.weight/(10**3)
+        elif 10**6 <= self.user.weight < 10**9:
+            weight = '%.4fkg' % self.user.weight/(10**6)
+        else:
+            # elif 10**9 <= self.user.weight:
+            weight = '%.5ft' % self.user.weight/(10**9)
+
+        # 1au = 149 597 871km
+        # 1光秒 299792.458 km
+        if self.user.height < 10**3:
+            height = '%dmm' % self.user.height
+        elif 10**3 <= self.user.height < 10**6:  # < 1km
+            height = '%.3fm' % self.user.height/(10**3)
+        elif 10**6 <= self.user.height < 299792.458 * (10**6):  # < 1光秒
+            height = '%.4f光秒' % self.user.height/(10**6)
+        else:
+            height = '%.5f光年' % self.user.height/(10**6)/149597870.7
+        return weight, height
+        # elif 10**9 <= self.user.height:
+        #     height = '%.5ft' % self.user.height/(10**9)
+
+    async def auto_reply(self, username: str, uid: int, danmu: str):
+        # [{'key': '^.*(好听).*$', 'percent': 1, 'reply': '好听赶紧关注啊！'}]
+        weight, height = await self.get_gamestr()
+        for r in self.user.reply:
+            key = r.get('key')
+            percent = float(r.get('percent', 1))
+            reply = r.get('reply')
+
+            check = re.findall(key, danmu)
+            if len(check) > 0 and len(check[0])/len(danmu) >= percent:
+                await self.send_danmu(reply.format(weight=weight, height=height))
+                return
+
+    async def auto_ban(self, username: str, uid: int, danmu: str):
+        for r in self.user.ban:
+            key = r.get('key')
+            percent = float(r.get('percent', 1))
+            hour = int(r.get('hour', 720))
+
+            check = re.findall(key, danmu)
+            if len(check) > 0 and len(check[0])/len(danmu) >= percent:
+                json_rsp = await self.user.req_s(BanUserReq.ban_user, self.user, self._room_id, uid, int(hour))
+                print(json_rsp)
+                return
+
     async def handle_danmu(self, data: dict):
         cmd = data['cmd']
+
         # print(data)
         try:
+            # self.user.height += 1
+            # self.user.update_log()
             if cmd == 'DANMU_MSG':
                 flag = data['info'][0][9]
                 if flag == 0:
+                    danmu = data['info'][1]
                     print(
-                        f"{data['info'][2][1]}({data['info'][2][0]})在{self._room_id}: {data['info'][1]}")
+                        f"{data['info'][2][1]}({data['info'][2][0]})在{self._room_id}: {danmu}")
+                    # 匹配danmu条件
+                    await self.auto_reply(data['info'][2][1], int(data['info'][2][0]), danmu)
+                    await self.auto_ban(data['info'][2][1], int(data['info'][2][0]), danmu)
+
             elif cmd == 'SEND_GIFT':
                 room_id = self._room_id
                 user_id = data['data']['uid']
@@ -217,6 +315,8 @@ class DanmuGiftThx(WsDanmuClient):
 
                 gift_name = data['data']['giftName']
                 gift_num = data['data']['num']
+                coin_type = data['data']['coin_type']
+                total_coin = data['data']['total_coin']
                 self.GIFT_QUEUE.put({
                     'room': room_id,
                     'username': username,
@@ -224,6 +324,9 @@ class DanmuGiftThx(WsDanmuClient):
                     'gift_name': gift_name,
                     'gift_num': int(gift_num),
                     't': time.time(),
+                    'coin_type': coin_type,
+                    'total_coin': total_coin,
+
                 })
 
             elif cmd == 'GUARD_BUY':

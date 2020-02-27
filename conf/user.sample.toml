@@ -17,6 +17,8 @@ alert_second = 300
 gift_comb_delay = 5
 # 送礼感谢格式
 gift_thx_format = "感谢{username}投喂的{giftname}x{num}"
+sliver_gift_thx_format = "感谢{username}投喂的{giftname}x{num}"
+gold_gift_thx_format = "感谢{username}投喂的{giftname}x{num}!"
 # 关注感谢格式
 focus_thx_format = "谢谢{username}的关注"
 # 上船感谢
@@ -39,3 +41,17 @@ medal_update_check_delay = 60
 random_list_1 = []
 random_list_2 = []
 random_list_3 = []
+
+height = 0
+weight = 0
+# 关键词回复
+[[users.reply]]
+  key = "^.*(好听).*$"
+  percent = 1
+  reply = "好听赶紧关注啊！"
+
+# 关键词禁言
+[[users.ban]]
+  key = "^(好菜)$"
+  percent = 1
+  hour = 720
