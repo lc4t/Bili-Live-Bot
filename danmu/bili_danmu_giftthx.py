@@ -242,26 +242,26 @@ class DanmuGiftThx(WsDanmuClient):
 
     async def get_gamestr(self):
         weight, height = '', ''
-        if self.user.weight < 10**3:
-            weight = '%dmg' % self.user.weight
-        elif 10**3 <= self.user.weight < 10**6:
-            weight = '%.3fg' % self.user.weight/(10**3)
-        elif 10**6 <= self.user.weight < 10**9:
-            weight = '%.4fkg' % self.user.weight/(10**6)
+        if int(self.user.weight) < 10**3:
+            weight = '%dmg' % (self.user.weight)
+        elif 10**3 <= int(self.user.weight) < 10**6:
+            weight = '%.3fg' % (self.user.weight/(10**3))
+        elif 10**6 <= int(self.user.weight) < 10**9:
+            weight = '%.4fkg' % (self.user.weight/(10**6))
         else:
             # elif 10**9 <= self.user.weight:
-            weight = '%.5ft' % self.user.weight/(10**9)
+            weight = '%.5ft' % (self.user.weight/(10**9))
 
         # 1au = 149 597 871km
         # 1光秒 299792.458 km
-        if self.user.height < 10**3:
-            height = '%dmm' % self.user.height
-        elif 10**3 <= self.user.height < 10**6:  # < 1km
-            height = '%.3fm' % self.user.height/(10**3)
+        if int(self.user.height) < 10**3:
+            height = '%dmm' % (self.user.height)
+        elif 10**3 <= int(self.user.height) < 10**6:  # < 1km
+            height = '%.3fm' % (self.user.height/(10**3))
         elif 10**6 <= self.user.height < 299792.458 * (10**6):  # < 1光秒
-            height = '%.4f光秒' % self.user.height/(10**6)
+            height = '%.4f光秒' % (self.user.height/(10**6))
         else:
-            height = '%.5f光年' % self.user.height/(10**6)/149597870.7
+            height = '%.5f光年' % (self.user.height/(10**6)/149597870.7)
         return weight, height
         # elif 10**9 <= self.user.height:
         #     height = '%.5ft' % self.user.height/(10**9)
@@ -346,7 +346,7 @@ class DanmuGiftThx(WsDanmuClient):
                          'USER_TOAST_MSG', 'SYS_MSG', 'COMBO_SEND', 'ROOM_BOX_USER',
                          'TV_START', 'TV_END', 'ANCHOR_LOT_END', 'ANCHOR_LOT_AWARD',
                          'ANCHOR_LOT_CHECKSTATUS', 'ANCHOR_LOT_STAR', 'ROOM_CHANGE',
-                         'new_anchor_reward', 'room_admin_entrance', 'ROOM_ADMINS']:
+                         'new_anchor_reward', 'room_admin_entrance', 'ROOM_ADMINS', 'ANCHOR_LOT_START']:
                 pass
             elif cmd in ['LIVE']:
                 print(f'开播 {self._room_id}')
