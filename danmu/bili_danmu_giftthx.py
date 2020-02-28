@@ -223,10 +223,23 @@ class DanmuGiftThx(WsDanmuClient):
         default_length = self.user.danmu_length
         msg = text[0:default_length]
         json_rsp = await self.user.req_s(UtilsReq.send_danmu, self.user, msg, self._room_id)
-        print(json_rsp)
+        # print(json_rsp)
         if json_rsp.get('msg', '') == 'msg in 1s':  # msg repeat 不处理了
             await asyncio.sleep(0.5)
             return await self.send_danmu(text, default_length)
+        elif json_rsp.get('msg', '') == '':
+            pass
+        elif json_rsp.get('msg', '') == '内容非法':
+            print(text)
+            print(json_rsp)
+        elif json_rsp.get('msg', '') == 'msg repeat':
+            print(text)
+            print(json_rsp)
+        elif json_rsp.get('msg', '') == '超出限制长度':
+            print(text)
+            print(json_rsp)
+            return await self.send_danmu(text, default_length-10)
+
         if len(text) > default_length:
             await asyncio.sleep(1)
             await self.send_danmu(text[default_length:], default_length)
