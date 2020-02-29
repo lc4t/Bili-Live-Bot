@@ -373,7 +373,7 @@ class DanmuGiftThx(WsDanmuClient):
                 gift_name = data['data']['gift_name']
                 gift_num = data['data']['num']
                 if self.is_live or (not self.user.only_live_thx):
-                    await self.send_danmu(self.user.gift_thx_format.format(username=username, num=gift_num, giftname=gift_name))
+                    await self.send_danmu(self.user.guard_thx_format.format(username=username, num=gift_num, giftname=gift_name))
 
             elif cmd in ['WELCOME_GUARD', 'WELCOME', 'NOTICE_MSG', 'SYS_GIFT',
                          'ACTIVITY_BANNER_UPDATE_BLS', 'ENTRY_EFFECT', 'ROOM_RANK',
