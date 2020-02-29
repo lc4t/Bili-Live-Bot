@@ -261,25 +261,25 @@ class DanmuGiftThx(WsDanmuClient):
         if int(self.user.weight) < 10**3:
             weight = '%dmg' % (self.user.weight)
         elif 10**3 <= int(self.user.weight) < 10**6:
-            weight = '%.3fg' % (self.user.weight/(10**3))
+            weight = '%.2fg' % (self.user.weight/(10**3))
         elif 10**6 <= int(self.user.weight) < 10**9:
-            weight = '%.4fkg' % (self.user.weight/(10**6))
+            weight = '%.2fkg' % (self.user.weight/(10**6))
         else:
             # elif 10**9 <= self.user.weight:
-            weight = '%.5ft' % (self.user.weight/(10**9))
+            weight = '%.2ft' % (self.user.weight/(10**9))
 
         # 1au = 149 597 871km
         # 1光秒 299792.458 km
         if int(self.user.height) < 10**3:
             height = '%dmm' % (self.user.height)
         elif 10**3 <= int(self.user.height) < 10**6:  # 1m - 1km
-            height = '%.3fm' % (self.user.height/(10**3))
+            height = '%.2fm' % (self.user.height/(10**3))
         elif 10**6 <= int(self.user.height) < 10**9:  # < 1km - 1kkm
-            height = '%.3fkm' % (self.user.height/(10**6))
+            height = '%.2fkm' % (self.user.height/(10**6))
         elif 10**9 <= self.user.height < 86400 * 299792458000:  # 光天
-            height = '%.4f光秒' % (self.user.height/(299792458000))
+            height = '%.2f光秒' % (self.user.height/(299792458000))
         else:
-            height = '%.5f光年' % (self.user.height/(10**6)/149597870.7)
+            height = '%.2f光年' % (self.user.height/(10**6)/149597870.7)
         return weight, height
         # elif 10**9 <= self.user.height:
         #     height = '%.5ft' % self.user.height/(10**9)
