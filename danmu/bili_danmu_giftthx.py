@@ -219,7 +219,25 @@ class DanmuGiftThx(WsDanmuClient):
 
             await asyncio.sleep(1)
 
-    async def send_danmu(self, text, default_length=30, retry=2):
+    def replace_num(self, text):
+        d = {
+            '0': '零',
+            '1': '一',
+            '2': '二',
+            '3': '三',
+            '4': '四',
+            '5': '五',
+            '6': '六',
+            '7': '七',
+            '8': '八',
+            '9': '九',
+        }
+        rp = random.sample(list(d.keys()), 5)
+        for o in rp:
+            text = text.replace(o, d[o])
+        return text
+
+    async def send_danmu(self, text, default_length=30, retry=5):
         if retry <= 0:
             print(text, '-->failed')
             return
@@ -235,9 +253,11 @@ class DanmuGiftThx(WsDanmuClient):
         elif json_rsp.get('msg', '') == '内容非法':
             print(text)
             print(json_rsp)
+            text = self.replace_num(text)
+            return await self.send_danmu(text, default_length, retry-1)
         elif json_rsp.get('msg', '') == 'msg repeat':
             await asyncio.sleep(0.5)
-            return await self.send_danmu(text, default_length, retry-1)
+            return await self.send_danmu(text, default_length, retry-2)
         elif json_rsp.get('msg', '') == '超出限制长度':
             print(text)
             print(json_rsp)
@@ -261,25 +281,25 @@ class DanmuGiftThx(WsDanmuClient):
         if int(self.user.weight) < 10**3:
             weight = '%dmg' % (self.user.weight)
         elif 10**3 <= int(self.user.weight) < 10**6:
-            weight = '%.2fg' % (self.user.weight/(10**3))
+            weight = '%.3fg' % (self.user.weight/(10**3))
         elif 10**6 <= int(self.user.weight) < 10**9:
-            weight = '%.2fkg' % (self.user.weight/(10**6))
+            weight = '%.4fkg' % (self.user.weight/(10**6))
         else:
             # elif 10**9 <= self.user.weight:
-            weight = '%.2ft' % (self.user.weight/(10**9))
+            weight = '%.5ft' % (self.user.weight/(10**9))
 
         # 1au = 149 597 871km
         # 1光秒 299792.458 km
         if int(self.user.height) < 10**3:
             height = '%dmm' % (self.user.height)
         elif 10**3 <= int(self.user.height) < 10**6:  # 1m - 1km
-            height = '%.2fm' % (self.user.height/(10**3))
+            height = '%.3fm' % (self.user.height/(10**3))
         elif 10**6 <= int(self.user.height) < 10**9:  # < 1km - 1kkm
-            height = '%.2fkm' % (self.user.height/(10**6))
+            height = '%.4fkm' % (self.user.height/(10**6))
         elif 10**9 <= self.user.height < 86400 * 299792458000:  # 光天
-            height = '%.2f光秒' % (self.user.height/(299792458000))
+            height = '%.4f光秒' % (self.user.height/(299792458000))
         else:
-            height = '%.2f光年' % (self.user.height/(10**6)/149597870.7)
+            height = '%.5f光年' % (self.user.height/(10**6)/149597870.7)
         return weight, height
         # elif 10**9 <= self.user.height:
         #     height = '%.5ft' % self.user.height/(10**9)
