@@ -237,7 +237,7 @@ class DanmuGiftThx(WsDanmuClient):
             text = text.replace(o, d[o])
         return text
 
-    async def send_danmu(self, text, default_length=30, retry=5):
+    async def send_danmu(self, text, default_length=30, retry=10):
         if retry <= 0:
             print(text, '-->failed')
             return
@@ -251,13 +251,13 @@ class DanmuGiftThx(WsDanmuClient):
         elif json_rsp.get('msg', '') == '':
             pass
         elif json_rsp.get('msg', '') == '内容非法':
-            print(text)
+            print(f'{text} --> {retry}')
             print(json_rsp)
             text = self.replace_num(text)
             return await self.send_danmu(text, default_length, retry-1)
         elif json_rsp.get('msg', '') == 'msg repeat':
             await asyncio.sleep(0.5)
-            return await self.send_danmu(text, default_length, retry-2)
+            return await self.send_danmu(text, default_length, retry-3)
         elif json_rsp.get('msg', '') == '超出限制长度':
             print(text)
             print(json_rsp)
