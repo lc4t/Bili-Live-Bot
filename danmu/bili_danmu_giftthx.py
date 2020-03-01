@@ -248,7 +248,7 @@ class DanmuGiftThx(WsDanmuClient):
         # print(json_rsp)
         if json_rsp.get('msg', '') == 'msg in 1s':
             await asyncio.sleep(0.5)
-            return await self.send_danmu(text, default_length)
+            return await self.send_danmu(text, default_length, retry)
         elif json_rsp.get('msg', '') == '':
             pass
         elif json_rsp.get('msg', '') == '内容非法':
@@ -262,11 +262,11 @@ class DanmuGiftThx(WsDanmuClient):
         elif json_rsp.get('msg', '') == '超出限制长度':
             print(text)
             print(json_rsp)
-            return await self.send_danmu(text, default_length-10)
+            return await self.send_danmu(text, default_length-10, retry)
 
         if len(text) > default_length:
             await asyncio.sleep(1)
-            await self.send_danmu(text[default_length:], default_length)
+            await self.send_danmu(text[default_length:], default_length, retry)
 
     async def game_log(self, coin_type, total_coin):
         if coin_type == 'silver':
