@@ -215,7 +215,8 @@ class DanmuGiftThx(WsDanmuClient):
                                                                   self.user.random_list_2),
                                                               random3=random.choice(self.user.random_list_3)))
                             await self.game_log(coin_type, total_coin)
-                        wait_to_send_danmu[username][gift_name].update({'gift_num': 0})
+                        wait_to_send_danmu[username][gift_name].update(
+                            {'gift_num': 0, 'total_coin': 0})
 
             await asyncio.sleep(1)
 
