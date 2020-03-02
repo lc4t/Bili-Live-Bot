@@ -341,8 +341,10 @@ class DanmuGiftThx(WsDanmuClient):
                 flag = data['info'][0][9]
                 if flag == 0:
                     danmu = data['info'][1]
-                    print(
-                        f"{data['info'][2][1]}({data['info'][2][0]})在{self._room_id}: {danmu}")
+                    d = f"{data['info'][2][1]}({data['info'][2][0]})在{self._room_id}: {danmu}"
+                    print(d)
+                    open('danmu.txt', 'a').write(d+'\n')
+
                     # 匹配danmu条件
                     await self.auto_reply(data['info'][2][1], int(data['info'][2][0]), danmu)
                     await self.auto_ban(data['info'][2][1], int(data['info'][2][0]), danmu)
