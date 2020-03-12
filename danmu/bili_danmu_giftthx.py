@@ -190,6 +190,8 @@ class DanmuGiftThx(WsDanmuClient):
 
     async def handle_danmu(self, data: dict):
         cmd = data['cmd']
+        print(data)
+        return True
         try:
             if cmd == 'DANMU_MSG':
                 flag = data['info'][0][9]
@@ -288,14 +290,10 @@ class DanmuGiftThx(WsDanmuClient):
                 t = data.get('timestamp')
                 delay = data.get('data').get('timer')
                 self.pk_end_time = t + delay + DELAY
-
-            # 绝杀
-            # {'cmd': 'PK_BATTLE_PRO_TYPE', 'pk_id': 748548, 'pk_status': 301, 'timestamp': 1582007539, 'data': {'timer': 60, 'final_hit_room_id': 3232493, 'be_final_hit_room_id': 21668541}}
-            # 结束报告
-            # {'cmd': 'PK_BATTLE_SETTLE_USER', 'pk_id': 748548, 'pk_status': 501, 'settle_status': 1, 'timestamp': 1582007599, 'data': {'pk_id': '748548', 'settle_status': 1, 'result_type': '3', 'battle_type': 0, 'result_info': {'total_score': 11, 'result_type_score': 10, 'pk_votes': 57052, 'pk_votes_name': '战力值', 'pk_crit_score': -1, 'pk_resist_crit_score': -1, 'pk_extra_score_slot': '每日20:00 ~ 23:00 ', 'pk_extra_value': 11410, 'pk_extra_score': 1, 'pk_task_score': 0, 'pk_times_score': 0, 'pk_done_times': 5, 'pk_total_times': 8, 'win_count': 1, 'win_final_hit': 1, 'winner_count_score': 0, 'task_score_list': []}, 'winner': {'room_id': 3232493, 'uid': 12461919, 'uname': '糕妹睡不醒', 'face': 'http://i1.hdslb.com/bfs/face/3a5ddcef155c9f5e5854e5d5b011aae17018576c.jpg', 'face_frame': '', 'exp': {'color': 5805790, 'user_level': 21, 'master_level': {'color': 10512625, 'level': 25}}, 'best_user': {'uid': 16821173, 'uname': '_饮马江湖风萧萧', 'face': 'http://i0.hdslb.com/bfs/face/00eaecb6da45fa072ff0cdef25a1f9d6fbc0571b.jpg', 'pk_votes': 57000, 'pk_votes_name': '战力值', 'exp': {'color': 6406234, 'level': 5}, 'face_frame': 'http://i0.hdslb.com/bfs/live/78e8a800e97403f1137c0c1b5029648c390be390.png', 'badge': {'url': 'http://i0.hdslb.com/bfs/live/b5e9ebd5ddb979a482421ca4ea2f8c1cc593370b.png', 'desc': '', 'position': 3}, 'award_info': None, 'award_info_list': [{'type': 1, 'bar_num': 4, 'bar_total': '6', 'get_status': 0, 'title': '每6次可获得', 'award_name': '时光沙漏', 'award_url': 'http://s1.hdslb.com/bfs/live/0898535576c195dd8b0c43c52a77276efb2a9aa1.png', 'num': 1, 'msg': '成为胜方最佳助攻6次可获得1枚', 'tips': '大乱斗中投喂可使主播本场免疫绝杀'}], 'end_win_award_info_list': {'list': []}}}, 'my_info': {'room_id': 3232493, 'uid': 12461919, 'uname': '糕妹睡不醒', 'face': 'http://i1.hdslb.com/bfs/face/3a5ddcef155c9f5e5854e5d5b011aae17018576c.jpg', 'face_frame': '', 'exp': {'color': 5805790, 'user_level': 21, 'master_level': {'color': 10512625, 'level': 25}}, 'best_user': {'uid': 16821173, 'uname': '_饮马江湖风萧萧', 'face': 'http://i0.hdslb.com/bfs/face/00eaecb6da45fa072ff0cdef25a1f9d6fbc0571b.jpg', 'pk_votes': 57000, 'pk_votes_name': '战力值', 'exp': {'color': 6406234, 'level': 5}, 'face_frame': 'http://i0.hdslb.com/bfs/live/78e8a800e97403f1137c0c1b5029648c390be390.png', 'badge': {'url': 'http://i0.hdslb.com/bfs/live/b5e9ebd5ddb979a482421ca4ea2f8c1cc593370b.png', 'desc': '', 'position': 3}, 'award_info': None, 'award_info_list': [{'type': 1, 'bar_num': 4, 'bar_total': '6', 'get_status': 0, 'title': '每6次可获得', 'award_name': '时光沙漏', 'award_url': 'http://s1.hdslb.com/bfs/live/0898535576c195dd8b0c43c52a77276efb2a9aa1.png', 'num': 1, 'msg': '成为胜方最佳助攻6次可获得1枚', 'tips': '大乱斗中投喂可使主播本场免疫绝杀'}], 'end_win_award_info_list': {'list': []}}}, 'level_info': {'first_rank_name': '小天才', 'second_rank_num': 2, 'first_rank_img': 'https://i0.hdslb.com/bfs/live/2eb2ffcc0c0a26d33ef2261c4ece5c9160ebcee0.png', 'second_rank_icon': 'https://i0.hdslb.com/bfs/live/a02cc5ae3c1dffe65c8a278075c542d7d495facb.png'}}}
-
-            elif cmd in ['WELCOME_GUARD', 'WELCOME', 'NOTICE_MSG', 'SYS_GIFT', 'ACTIVITY_BANNER_UPDATE_BLS', 'ENTRY_EFFECT', 'ROOM_RANK', 'ACTIVITY_BANNER_UPDATE_V2', 'COMBO_END', 'ROOM_REAL_TIME_MESSAGE_UPDATE', 'ROOM_BLOCK_MSG', 'WISH_BOTTLE', 'WEEK_STAR_CLOCK', 'ROOM_BOX_MASTER', 'HOUR_RANK_AWARDS', 'ROOM_SKIN_MSG', 'RAFFLE_START', 'RAFFLE_END', 'GUARD_LOTTERY_START', 'GUARD_LOTTERY_END', 'GUARD_MSG', 'USER_TOAST_MSG', 'SYS_MSG', 'COMBO_SEND', 'ROOM_BOX_USER', 'TV_START', 'TV_END', 'ANCHOR_LOT_END', 'ANCHOR_LOT_AWARD', 'ANCHOR_LOT_CHECKSTATUS', 'ANCHOR_LOT_STAR', 'ROOM_CHANGE', 'LIVE', 'new_anchor_reward', 'room_admin_entrance', 'ROOM_ADMINS', 'PREPARING']:
-                pass
+            elif cmd.startswith('ANCHOR'):
+                print(data)
+            # elif cmd in ['WELCOME_GUARD', 'WELCOME', 'NOTICE_MSG', 'SYS_GIFT', 'ACTIVITY_BANNER_UPDATE_BLS', 'ENTRY_EFFECT', 'ROOM_RANK', 'ACTIVITY_BANNER_UPDATE_V2', 'COMBO_END', 'ROOM_REAL_TIME_MESSAGE_UPDATE', 'ROOM_BLOCK_MSG', 'WISH_BOTTLE', 'WEEK_STAR_CLOCK', 'ROOM_BOX_MASTER', 'HOUR_RANK_AWARDS', 'ROOM_SKIN_MSG', 'RAFFLE_START', 'RAFFLE_END', 'GUARD_LOTTERY_START', 'GUARD_LOTTERY_END', 'GUARD_MSG', 'USER_TOAST_MSG', 'SYS_MSG', 'COMBO_SEND', 'ROOM_BOX_USER', 'TV_START', 'TV_END', 'ANCHOR_LOT_END', 'ANCHOR_LOT_AWARD', 'ANCHOR_LOT_CHECKSTATUS', 'ANCHOR_LOT_STAR', 'ROOM_CHANGE', 'LIVE', 'new_anchor_reward', 'room_admin_entrance', 'ROOM_ADMINS', 'PREPARING']:
+            #     pass
             else:
                 print(data)
         except:
