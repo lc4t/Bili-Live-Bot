@@ -38,7 +38,7 @@ class User:
         self.password = dict_user['password']
         self.alias = dict_user.get('alias', self.name)
         self.manage_room = dict_user['manage_room']
-        self.alerts = dict_user['alerts']
+        self.alerts = dict_user.get('alerts', [])
         self.gift_comb_delay = dict_user['gift_comb_delay']
         self.alert_second = dict_user['alert_second']
         self.gift_thx_format = dict_user.get('gift_thx_format', '感谢{username}投喂的{giftname}x{num}')
@@ -56,6 +56,7 @@ class User:
         self.weight = dict_user.get('weight', 0)
 
         self.fans_check_delay = dict_user.get('fans_check_delay', 20)
+        
 
         self.random_list_1 = dict_user.get('random_list_1', [])
         self.random_list_2 = dict_user.get('random_list_2', [])
