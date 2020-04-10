@@ -73,7 +73,7 @@ class WsDanmuClient(Client):
             pass
         # cmd
         elif opt == Opt.SEND_MSG_REPLY:
-            if not self.handle_danmu(json.loads(body.decode('utf-8'))):
+            if not await self.handle_danmu(json.loads(body.decode('utf-8'))):
                 return False
         # 握手确认
         elif opt == Opt.AUTH_REPLY:

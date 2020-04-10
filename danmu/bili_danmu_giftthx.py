@@ -1,4 +1,4 @@
-from .bili_danmu import WsDanmuClient
+
 import asyncio
 import traceback
 import json
@@ -9,11 +9,12 @@ import time
 import re
 import queue
 from printer import info as print
+from danmu.bili_abc import bili_danmu
 from reqs.utils import UtilsReq
 from reqs.custom import BanUserReq
 
 
-class DanmuGiftThx(WsDanmuClient):
+class DanmuGiftThx(bili_danmu.WsDanmuClient):
 
     # GIFT_MSG = '谢谢可爱的{username}投喂{giftname}x{num} (╭￣3￣)╭♡'
     # DELAY_SECOND = 3
