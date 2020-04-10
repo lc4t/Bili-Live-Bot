@@ -61,13 +61,13 @@ class WsDanmuClient(Client):
         if ver == 2 and opt == Opt.SEND_MSG_REPLY:  # v2 协议有混合，可能不成熟吧
             packs = zlib.decompress(body)
             for opt, body in Pack.unpack(packs):
-                if not self.parse_body(body, opt):
+                if not await self.parse_body(body, opt):
                     return False
             return True
         else:
-            return self.parse_body(body, opt)
+            return await self.parse_body(body, opt)
 
-    def parse_body(self, body: bytes, opt: int) -> bool:
+    async def parse_body(self, body: bytes, opt: int) -> bool:
         # 人气值(或者在线人数或者类似)以及心跳
         if opt == Opt.HEARTBEAT_REPLY:
             pass
