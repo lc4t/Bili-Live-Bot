@@ -164,7 +164,7 @@ class DanmuGiftThx(WsDanmuClient):
                 if self.pk_end_time > time.time() or not self.end:
                     # print(
                     #     f'PK还有{self.pk_end_time - time.time()}s结束, 分差{self.pk_op_votes-self.pk_me_votes}')
-                    if self.pk_end_time - time.time() < 1 and self.pk_op_votes - self.pk_me_votes >= 0:
+                    if self.pk_end_time - time.time() < 1 and self.pk_op_votes - self.pk_me_votes >= 0 and self.pk_end_time - time.time() > -5:
                         # print(f'开启偷塔, 时限{self.pk_end_time - time.time()}')
                         # print(f'当前分差{self.pk_op_votes-self.pk_me_votes}')
                         if self.pk_op_votes - self.pk_me_votes > self.user.pk_max_votes or self.pk_now_use > self.user.pk_max_votes:
@@ -176,7 +176,7 @@ class DanmuGiftThx(WsDanmuClient):
                         gift_num = need
                         print(f'赠送{need}个{self.user.pk_gift_id}')
                         # print(UtilsReq.send_gold, self.user, gift_id, gift_num, self._room_id, ruid)
-                        self.pk_now_use += 52*need
+                        self.pk_now_use += self.user.pk_gift_rank*need
                         json_rsp = await self.user.req_s(UtilsReq.send_gold, self.user, gift_id, gift_num, self._room_id, ruid)
                         # status = json_rsp.get('data', {}).get('live_status')
                         # print(json_rsp)
@@ -190,8 +190,7 @@ class DanmuGiftThx(WsDanmuClient):
 
     async def handle_danmu(self, data: dict):
         cmd = data['cmd']
-        print(data)
-        return True
+        # print(data)
         try:
             if cmd == 'DANMU_MSG':
                 flag = data['info'][0][9]
@@ -233,6 +232,7 @@ class DanmuGiftThx(WsDanmuClient):
                 self.pk_end_time = data.get('data').get('pk_end_time') - 10 + DELAY
 
             elif cmd == 'PK_BATTLE_PROCESS':
+                print(data)
                 self.end = False
                 pk_id = data.get('pk_id')
                 t = data.get('timestamp')
