@@ -143,83 +143,87 @@ class DanmuGiftThx(bili_danmu.WsDanmuClient):
         while(1):
             # 取出所有结果，添加到等待队列
             # 如果某个room-user-gift保持了5s不动，则推出
-            async with sem:
-                qlength = self.GIFT_QUEUE.qsize()
-                cache_gift = []
-                for i in range(qlength):
-                    cache_gift.append(self.GIFT_QUEUE.get())
-            # print(cache_gift)
-            # cache_gift是所有没处理的送礼物的信息
-            # 现在将他们合并为一个list
-            for gift_info in cache_gift:
-                if gift_info.get('room') != roomid:
-                    print('error room id')
-                    exit(0)
-                # 拿到单条礼物信息
-                username, gift_name, gift_num, t, coin_type, total_coin = gift_info.get('username'), gift_info.get(
-                    'gift_name'), gift_info.get('gift_num'), gift_info.get('t'),  gift_info.get('coin_type'), gift_info.get('total_coin')
-                # 以用户名为主键
-                if username not in wait_to_send_danmu:
-                    wait_to_send_danmu[username] = {}    # 新建username
-                # 礼物名为主键
-                if f'{gift_name}_{coin_type}' not in wait_to_send_danmu.get(username):
-                    wait_to_send_danmu[username].update(
-                        {f'{gift_name}_{coin_type}': {
-                            'gift_num': gift_num,
-                            'coin_type': coin_type,
-                            'total_coin': total_coin,
-                            't': t,
-                        }})   # username->gift_name
-                else:
-                    # 查找已经送了的有多少
-                    already_num = wait_to_send_danmu[username].get(
-                        f'{gift_name}_{coin_type}', {}).get('gift_num', 0)  # 已经送了的
-                    already_total_coin = wait_to_send_danmu[username].get(
-                        f'{gift_name}_{coin_type}', {}).get('total_coin', 0)  # 已经送了的总价值
-
-                    wait_to_send_danmu[username][f'{gift_name}_{coin_type}'].update(
-                        {
-                            'gift_num': gift_num + already_num,
-                            't': t,
-                            'total_coin': total_coin+already_total_coin
-                        })  # 更新数量
-
-            # print(wait_to_send_danmu)
-
-            # 检查时间是否达到推出标准
-            # 这里可以重写感谢弹幕
-
-            for username, gifts in wait_to_send_danmu.items():
-                for gift_name, info in gifts.items():
-                    gift_num = info.get('gift_num')
-                    coin_type = info.get('coin_type')
-                    total_coin = info.get('total_coin', 0)
-                    gift_name_true = gift_name.strip(f'_{coin_type}')
-                    fstr = ''
-                    if coin_type == 'silver':
-                        fstr = self.user.silver_gift_thx_format
+            try:
+                async with sem:
+                    qlength = self.GIFT_QUEUE.qsize()
+                    cache_gift = []
+                    for i in range(qlength):
+                        cache_gift.append(self.GIFT_QUEUE.get())
+                # print(cache_gift)
+                # cache_gift是所有没处理的送礼物的信息
+                # 现在将他们合并为一个list
+                for gift_info in cache_gift:
+                    if gift_info.get('room') != roomid:
+                        print('error room id')
+                        exit(0)
+                    # 拿到单条礼物信息
+                    username, gift_name, gift_num, t, coin_type, total_coin = gift_info.get('username'), gift_info.get(
+                        'gift_name'), gift_info.get('gift_num'), gift_info.get('t'),  gift_info.get('coin_type'), gift_info.get('total_coin')
+                    # 以用户名为主键
+                    if username not in wait_to_send_danmu:
+                        wait_to_send_danmu[username] = {}    # 新建username
+                    # 礼物名为主键
+                    if f'{gift_name}_{coin_type}' not in wait_to_send_danmu.get(username):
+                        wait_to_send_danmu[username].update(
+                            {f'{gift_name}_{coin_type}': {
+                                'gift_num': gift_num,
+                                'coin_type': coin_type,
+                                'total_coin': total_coin,
+                                't': t,
+                            }})   # username->gift_name
                     else:
-                        fstr = self.user.gold_gift_thx_format
-                    if gift_num == 0:
-                        continue
-                    if time.time() - info.get('t') > self.user.gift_comb_delay:
-                        if self.is_live or (not self.user.only_live_thx):
+                        # 查找已经送了的有多少
+                        already_num = wait_to_send_danmu[username].get(
+                            f'{gift_name}_{coin_type}', {}).get('gift_num', 0)  # 已经送了的
+                        already_total_coin = wait_to_send_danmu[username].get(
+                            f'{gift_name}_{coin_type}', {}).get('total_coin', 0)  # 已经送了的总价值
 
-                            # self.user.gift_thx_silver_format
-                            await self.send_danmu(fstr.format(username=username,
-                                                              num=gift_num,
-                                                              total_coin=total_coin,
-                                                              giftname=gift_name_true,
-                                                              random1=random.choice(
-                                                                  self.user.random_list_1),
-                                                              random2=random.choice(
-                                                                  self.user.random_list_2),
-                                                              random3=random.choice(self.user.random_list_3)))
-                            await self.game_log(coin_type, total_coin)
-                        wait_to_send_danmu[username][gift_name].update(
-                            {'gift_num': 0, 'total_coin': 0})
+                        wait_to_send_danmu[username][f'{gift_name}_{coin_type}'].update(
+                            {
+                                'gift_num': gift_num + already_num,
+                                't': t,
+                                'total_coin': total_coin+already_total_coin
+                            })  # 更新数量
 
-            await asyncio.sleep(1)
+                # print(wait_to_send_danmu)
+
+                # 检查时间是否达到推出标准
+                # 这里可以重写感谢弹幕
+
+                for username, gifts in wait_to_send_danmu.items():
+                    for gift_name, info in gifts.items():
+                        gift_num = info.get('gift_num')
+                        coin_type = info.get('coin_type')
+                        total_coin = info.get('total_coin', 0)
+                        gift_name_true = gift_name.strip(f'_{coin_type}')
+                        fstr = ''
+                        if coin_type == 'silver':
+                            fstr = self.user.silver_gift_thx_format
+                        else:
+                            fstr = self.user.gold_gift_thx_format
+                        if gift_num == 0:
+                            continue
+                        if time.time() - info.get('t') > self.user.gift_comb_delay:
+                            if self.is_live or (not self.user.only_live_thx):
+
+                                # self.user.gift_thx_silver_format
+                                await self.send_danmu(fstr.format(username=username,
+                                                                  num=gift_num,
+                                                                  total_coin=total_coin,
+                                                                  giftname=gift_name_true,
+                                                                  random1=random.choice(
+                                                                      self.user.random_list_1),
+                                                                  random2=random.choice(
+                                                                      self.user.random_list_2),
+                                                                  random3=random.choice(self.user.random_list_3)))
+                                await self.game_log(coin_type, total_coin)
+                            wait_to_send_danmu[username][gift_name].update(
+                                {'gift_num': 0, 'total_coin': 0})
+
+                await asyncio.sleep(1)
+            except:
+                traceback.print_exc()
+                await asyncio.sleep(1)
 
     def replace_num(self, text):
         d = {
@@ -334,7 +338,7 @@ class DanmuGiftThx(bili_danmu.WsDanmuClient):
     async def handle_danmu(self, data: dict):
         cmd = data['cmd']
 
-        # print(data)
+        print(data)
         try:
             # self.user.height += 1
             # self.user.update_log()

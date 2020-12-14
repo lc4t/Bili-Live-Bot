@@ -1,12 +1,11 @@
 import json
-from typing import Optional
 import zlib
+from typing import Optional
 
 from aiohttp import ClientSession
-from danmu_abc import WsConn, Client
-
+from danmu.bili_abc.utils import Header, Opt, Pack
+from danmu_abc import Client, WsConn
 from printer import info as print
-from danmu.bili_abc.utils import Pack, Opt, Header
 
 
 class WsDanmuClient(Client):

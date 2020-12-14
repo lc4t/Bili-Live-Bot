@@ -17,10 +17,10 @@ class DynRaffleHandlerReq:
             'setting[cachedTime]': 0,
             'at_uids': '',
             'at_control': [],
-            'csrf_token': user.dict_bili['csrf'],
+            'csrf_token': user.dict_user['csrf'],
         }
 
-        json_rsp = await user.other_session.request_json('POST', url, data=data, headers=user.dict_bili['pcheaders'])
+        json_rsp = await user.other_session.request_json('POST', url, data=data, headers=user.pc.headers)
         return json_rsp
 
     @staticmethod
@@ -32,9 +32,9 @@ class DynRaffleHandlerReq:
             'content': content,
             'at_uids': at_uids,
             'ctrl': ctrl,
-            'csrf_token': user.dict_bili['csrf'],
+            'csrf_token': user.dict_user['csrf'],
         }
-        json_rsp = await user.other_session.request_json('POST', url, headers=user.dict_bili['pcheaders'], data=data)
+        json_rsp = await user.other_session.request_json('POST', url, headers=user.pc.headers, data=data)
         return json_rsp
 
     @staticmethod
@@ -48,10 +48,10 @@ class DynRaffleHandlerReq:
         url = f'https://api.vc.bilibili.com/link_draw/v1/doc/delete'
         data = {
             'doc_id': doc_id,
-            'csrf_token': user.dict_bili['csrf'],
+            'csrf_token': user.dict_user['csrf'],
             'csrf': ''
         }
-        json_rsp = await user.other_session.request_json('POST', url, data=data, headers=user.dict_bili['pcheaders'])
+        json_rsp = await user.other_session.request_json('POST', url, data=data, headers=user.pc.headers)
         return json_rsp
 
     @staticmethod
@@ -60,10 +60,10 @@ class DynRaffleHandlerReq:
         payload = {
             'uid': user.dict_bili['uid'],
             'dynamic_id': dyn_id,
-            'csrf_token': user.dict_bili['csrf'],
+            'csrf_token': user.dict_user['csrf'],
         }
 
-        json_rsp = await user.other_session.request_json('POST', url, headers=user.dict_bili['pcheaders'], data=payload)
+        json_rsp = await user.other_session.request_json('POST', url, headers=user.pc.headers, data=payload)
         return json_rsp
 
     @staticmethod

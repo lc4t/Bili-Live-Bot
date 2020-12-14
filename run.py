@@ -1,45 +1,26 @@
-import sys
-import signal
-import threading
 import asyncio
+import signal
+import sys
+import threading
 
 import aiohttp
 
+import bili_sched
+import bili_statistics
 import conf_loader
 import notifier
-import bili_sched
 import printer
-import bili_statistics
 from console_cmd import ConsoleCmd
-from tasks.login import LoginTask
-from tasks.live_daily_job import (
-    HeartBeatTask,
-    # OpenSilverBoxTask,
-    # RecvDailyBagTask,
-    SignTask,
-    # WatchTvTask,
-    # SignFansGroupsTask,
-    # SendGiftTask,
-    # ExchangeSilverCoinTask
-)
-from tasks.main_daily_job import (
-    JudgeCaseTask,
-    BiliMainTask,
-    DahuiyuanTask
-)
-from tasks.manga_daily_job import (
-    ShareComicTask,
-    MangaSignTask,
-)
-from tasks.utils import UtilsTask
+from danmu import raffle_handler
+from danmu.bili_danmu_forward import DanmuForward
 # 弹幕
 from danmu.bili_danmu_monitor import DanmuPrinter, DanmuRaffleMonitor
-from danmu.bili_danmu_giftthx import DanmuGiftThx
 from danmu.yj_monitor import TcpYjMonitorClient
-from danmu import raffle_handler
+from dyn.monitor_dyn_raffle import DynRaffleMonitor
 # 实物抽奖
 from substance.monitor_substance_raffle import SubstanceRaffleMonitor
-from dyn.monitor_dyn_raffle import DynRaffleMonitor
+from tasks.login import LoginTask
+from tasks.utils import UtilsTask
 
 loop = asyncio.get_event_loop()
 
@@ -82,10 +63,11 @@ users = loop.run_until_complete(init_users())
 # 时间间隔为小时，同时每次休眠结束都会计时归零，重新从当前时间计算时间间隔
 # 下面表示每隔多少小时执行一次
 def add_daily_jobs():
-    bili_sched.add_daily_jobs(HeartBeatTask, every_hours=6)
+    pass
+    # bili_sched.add_daily_jobs(HeartBeatTask, every_hours=6)
     # bili_sched.add_daily_jobs(OpenSilverBoxTask, every_hours=6)
     # bili_sched.add_daily_jobs(RecvDailyBagTask, every_hours=3)
-    bili_sched.add_daily_jobs(SignTask, every_hours=6)
+    # bili_sched.add_daily_jobs(SignTask, every_hours=6)
     # bili_sched.add_daily_jobs(WatchTvTask, every_hours=6)
     # bili_sched.add_daily_jobs(SignFansGroupsTask, every_hours=6)
     # bili_sched.add_daily_jobs(SendGiftTask, every_hours=2)
@@ -100,7 +82,7 @@ def add_daily_jobs():
 add_daily_jobs()
 ############################################################################
 ############################################################################
-loop.run_until_complete(notifier.exec_task(LoginTask))
+# loop.run_until_complete(notifier.exec_task(LoginTask))
 
 other_control = dict_ctrl['other_control']
 area_ids = loop.run_until_complete(notifier.exec_func(UtilsTask.fetch_blive_areas))
@@ -157,7 +139,7 @@ async def init_danmu_managers():
     for user in users.gets(-2):
         for room in user.manage_room:
             session = aiohttp.ClientSession()
-            danmu_ = DanmuGiftThx(
+            danmu_ = DanmuForward(
                 room_id=int(room),
                 area_id=-1,
                 session=session)
@@ -184,10 +166,10 @@ danmu_manager = loop.run_until_complete(init_danmu_managers())
 
 tasks = []
 tasks += [manager.run() for manager in danmu_manager]
-tasks += [s.run_sender() for s in danmu_manager]
-tasks += [s.run_alter() for s in danmu_manager]
-tasks += [s.run_fans() for s in danmu_manager]
-tasks += [s.run_medal_update() for s in danmu_manager]
+# tasks += [s.run_sender() for s in danmu_manager]
+# tasks += [s.run_alter() for s in danmu_manager]
+# tasks += [s.run_fans() for s in danmu_manager]
+# tasks += [s.run_medal_update() for s in danmu_manager]
 
 
 other_tasks = [

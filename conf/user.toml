@@ -1,10 +1,6 @@
 [[users]]
-username = ""
-password = ""
-alias = ""
-access_key = ""
-cookie = ""
-csrf = ""
-uid = ""
-refresh_token = ""
 manage_room = [ 8478563,]
+username = "default"
+password = "default"
+tg_bot_token = ""
+

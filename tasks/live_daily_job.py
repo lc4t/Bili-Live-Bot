@@ -116,7 +116,11 @@ class SignTask(Sched, DontWait, Unique):
 
     @staticmethod
     async def work(user):
-        json_rsp = await user.req_s(SignReq.sign, user)
+        import traceback
+        try:
+            json_rsp = await user.req_s(SignReq.sign, user)
+        except:
+            traceback.print_exc()
         # user.info(f'签到状态: {json_rsp["message"]}')
 
 

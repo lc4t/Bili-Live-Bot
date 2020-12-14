@@ -74,11 +74,20 @@ class LoginTask(Forced, Wait, Multi):
         )
         url_password = parse.quote_plus(crypto_password)
         url_name = parse.quote_plus(name)
-        json_rsp = await LoginReq.login(user, url_name, url_password)
-        while json_rsp['code'] == -105:
-            binary_rsp = await LoginReq.fetch_capcha(user)
-            captcha = await LoginReq.cnn_captcha(user, binary_rsp)
-            json_rsp = await LoginReq.login(user, url_name, url_password, captcha)
+
+        for _ in range(3):
+            json_rsp = await LoginReq.login(user, url_name, url_password)
+            if json_rsp['code'] == -105:
+                gt_params = {params_pair.split('=')[0]: params_pair.split('=')[1] for params_pair in
+                             json_rsp["data"]["url"].split('?')[1].split('&')}
+                gt_solve_rsp = await LoginReq.gt_solve(user, gt_params)
+                if gt_solve_rsp is None or gt_solve_rsp["success"] == 0:
+                    user.info(f"验证码识别失败:{gt_solve_rsp}")
+                    continue
+                json_rsp = await LoginReq.login_with_captcha(user, url_name, url_password,
+                                                             gt_solve_rsp["challenge"],
+                                                             gt_solve_rsp["validate"])
+            break
 
         if not json_rsp['code'] and not json_rsp['data']['status']:
             data = json_rsp['data']
