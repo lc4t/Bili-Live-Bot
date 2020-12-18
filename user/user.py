@@ -19,7 +19,7 @@ class User:
         'id', 'force_sleep', 'name', 'password', 'alias', 'task_ctrl',
         'task_arrangement', 'is_in_jail',
 
-        'tg_bot_token', 'manage_room', 'tg_channel',
+        'tg_bot_token', 'manage_room', 'tg_channel', 'top_live_delay',
 
         'bililive_session', 'login_session', 'other_session',
 
@@ -65,6 +65,7 @@ class User:
 
         self.manage_room = dict_user['manage_room']
         self.tg_channel = dict_user['tg_channel']
+        self.top_live_delay = int(dict_user.get('top_live_delay', 30))
         # self.alerts = dict_user.get('alerts', [])
         # self.gift_comb_delay = dict_user['gift_comb_delay']
         # self.alert_second = dict_user['alert_second']

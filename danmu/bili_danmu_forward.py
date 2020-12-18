@@ -51,11 +51,14 @@ class DanmuForward(bili_danmu.WsDanmuClient):
             json_rsp = await self.user.req_s(TopUserReq.top_user, self.user, self._room_id, self.manage_room_uid, page)
             if page == 1:
                 data += json_rsp.get('data').get('top3', [])
-            if not json_rsp.get('data').get('list'):
+            # if len(json_rsp.get('data').get('list')) <=:
+            #     break
+            # else:
+            data += json_rsp.get('data').get('list', [])
+            if len(json_rsp.get('data').get('list', [])) < 29:
                 break
-            else:
-                data += json_rsp.get('data').get('list', [])
             page += 1
+            await asyncio.sleep(3)
         return data
         # alive = [i.get('username') for i in data if i.get('is_alive')]
         # not_alive = [i.get('username') for i in data if not i.get('is_alive')]
@@ -69,8 +72,8 @@ class DanmuForward(bili_danmu.WsDanmuClient):
             # 不看了 self.alive - alive
             if alive != self.alive:
                 await self.forward_to_tg(f"在线更新【{','.join(list(alive - self.alive))}】")
-            self.alive = alive
-            await asyncio.sleep(10)
+                self.alive = alive
+            await asyncio.sleep(self.user.top_live_delay)
 
     async def handle_danmu(self, data: dict):
         cmd = data['cmd']
