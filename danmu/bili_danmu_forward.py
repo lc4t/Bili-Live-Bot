@@ -49,17 +49,15 @@ class DanmuForward(bili_danmu.WsDanmuClient):
         page = 1
         data = []
         while(1):
-            json_rsp = await self.user.req_s(TopUserReq.top_user, self.user, self._room_id, self.manage_room_uid, page)
+            json_rsp = await TopUserReq.top_user(self.user, self._room_id, self.manage_room_uid, page)
             if page == 1:
                 data += json_rsp.get('data').get('top3', [])
             data += json_rsp.get('data').get('list', [])
             if len(json_rsp.get('data').get('list', [])) < 29:
                 break
             page += 1
-            await asyncio.sleep(3)
+            await asyncio.sleep(0.25)
         return data
-        # alive = [i.get('username') for i in data if i.get('is_alive')]
-        # not_alive = [i.get('username') for i in data if not i.get('is_alive')]
 
     async def alert_top_live(self):
         while(1):
