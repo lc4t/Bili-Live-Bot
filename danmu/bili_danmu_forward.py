@@ -45,10 +45,16 @@ class DanmuForward(bili_danmu.WsDanmuClient):
             json_rsp = await self.user.req_s(UtilsReq.init_room, self.user, self._room_id)
             self.manage_room_uid = json_rsp.get('data').get('uid')
 
-        json_rsp = await self.user.req_s(TopUserReq.top_user, self.user, self._room_id, self.manage_room_uid)
+        page = 1
         data = []
-        data += json_rsp.get('data').get('list', [])
-        data += json_rsp.get('data').get('top3', [])
+        while(1):
+            json_rsp = await self.user.req_s(TopUserReq.top_user, self.user, self._room_id, self.manage_room_uid, page)
+            if page == 1:
+                data += json_rsp.get('data').get('top3', [])
+            if not json_rsp.get('data').get('list'):
+                break
+            else:
+                data += json_rsp.get('data').get('list', [])
         return data
         # alive = [i.get('username') for i in data if i.get('is_alive')]
         # not_alive = [i.get('username') for i in data if not i.get('is_alive')]

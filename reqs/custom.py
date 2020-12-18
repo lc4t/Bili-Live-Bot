@@ -45,6 +45,6 @@ class BanUserReq:
 class TopUserReq:
     @staticmethod
     async def top_user(user, room_id: int, uid: int, page: int = 1):
-        url = f'{API_LIVE}/xlive/app-room/v2/guardTab/topList?roomid={room_id}&page={page}&ruid={uid}&page_size=50'
+        url = f'{API_LIVE}/xlive/app-room/v2/guardTab/topList?roomid={room_id}&page={page}&ruid={uid}&page_size=29'
         json_rsp = await user.other_session.request_json('GET', url, headers=user.pc.headers)
         return json_rsp
