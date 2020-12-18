@@ -1,6 +1,7 @@
 [[users]]
-manage_room = [ 8478563,]
+manage_room = [ ,]
 username = "default"
 password = "default"
 tg_bot_token = ""
+tg_channel = ""
 

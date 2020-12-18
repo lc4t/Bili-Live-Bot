@@ -1,5 +1,6 @@
-import utils
 from bili_global import API_LIVE
+
+import utils
 
 
 class BuyLatiaoReq:
@@ -38,4 +39,12 @@ class BanUserReq:
             'csrf': user.dict_user['csrf'],
         }
         json_rsp = await user.other_session.request_json('POST', url, data=data, headers=user.pc.headers)
+        return json_rsp
+
+
+class TopUserReq:
+    @staticmethod
+    async def top_user(user, room_id: int, uid: int, page: int = 1):
+        url = f'{API_LIVE}/xlive/app-room/v2/guardTab/topList?roomid={room_id}&page={page}&ruid={uid}&page_size=50'
+        json_rsp = await user.other_session.request_json('GET', url, headers=user.pc.headers)
         return json_rsp

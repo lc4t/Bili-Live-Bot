@@ -11,13 +11,17 @@ import traceback
 
 import telepot
 from printer import info as print
-from reqs.custom import BanUserReq
+from reqs.custom import TopUserReq
 from reqs.utils import UtilsReq
 
 from danmu.bili_abc import bili_danmu
 
 
 class DanmuForward(bili_danmu.WsDanmuClient):
+    manage_room_uid = None
+    alive = set()
+    not_alive = set()
+
     async def set_user(self, user):
         self.user = user
         self.GIFT_QUEUE = queue.Queue()
@@ -34,7 +38,32 @@ class DanmuForward(bili_danmu.WsDanmuClient):
         return self.is_live
 
     async def forward_to_tg(self, text):
-        self.bot.sendMessage('215246669', text, parse_mode='HTML')
+        self.bot.sendMessage(self.user.tg_channel, text, parse_mode='HTML')
+
+    async def top_isalive(self):
+        if not self.manage_room_uid:
+            json_rsp = await self.user.req_s(UtilsReq.init_room, self.user, self._room_id)
+            self.manage_room_uid = json_rsp.get('data').get('uid')
+
+        json_rsp = await self.user.req_s(TopUserReq.top_user, self.user, self._room_id, self.manage_room_uid)
+        data = []
+        data += json_rsp.get('data').get('list', [])
+        data += json_rsp.get('data').get('top3', [])
+        return data
+        # alive = [i.get('username') for i in data if i.get('is_alive')]
+        # not_alive = [i.get('username') for i in data if not i.get('is_alive')]
+
+    async def alert_top_live(self):
+        while(1):
+            data = await self.top_isalive()
+            alive = set([i.get('username') for i in data if i.get('is_alive')])
+            # not_alive = set([i.get('username') for i in data if not i.get('is_alive')])
+            # 新增观看 alive - self.alive
+            # 不看了 self.alive - alive
+            if alive != self.alive:
+                await self.forward_to_tg(f"在线更新【{','.join(list(alive - self.alive))}】")
+            self.alive = alive
+            await asyncio.sleep(10)
 
     async def handle_danmu(self, data: dict):
         cmd = data['cmd']

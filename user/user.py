@@ -19,7 +19,7 @@ class User:
         'id', 'force_sleep', 'name', 'password', 'alias', 'task_ctrl',
         'task_arrangement', 'is_in_jail',
 
-        'tg_bot_token', 'manage_room',
+        'tg_bot_token', 'manage_room', 'tg_channel',
 
         'bililive_session', 'login_session', 'other_session',
 
@@ -64,6 +64,7 @@ class User:
         self.dyn_lottery_friends = dyn_lottery_friends  # list (uid, name)
 
         self.manage_room = dict_user['manage_room']
+        self.tg_channel = dict_user['tg_channel']
         # self.alerts = dict_user.get('alerts', [])
         # self.gift_comb_delay = dict_user['gift_comb_delay']
         # self.alert_second = dict_user['alert_second']
