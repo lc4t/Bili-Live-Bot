@@ -55,6 +55,7 @@ class DanmuForward(bili_danmu.WsDanmuClient):
                 break
             else:
                 data += json_rsp.get('data').get('list', [])
+            page += 1
         return data
         # alive = [i.get('username') for i in data if i.get('is_alive')]
         # not_alive = [i.get('username') for i in data if not i.get('is_alive')]
