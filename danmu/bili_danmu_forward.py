@@ -8,6 +8,7 @@ import random
 import re
 import time
 import traceback
+from exceptions import ForbiddenError
 
 import telepot
 from printer import info as print
@@ -51,9 +52,6 @@ class DanmuForward(bili_danmu.WsDanmuClient):
             json_rsp = await self.user.req_s(TopUserReq.top_user, self.user, self._room_id, self.manage_room_uid, page)
             if page == 1:
                 data += json_rsp.get('data').get('top3', [])
-            # if len(json_rsp.get('data').get('list')) <=:
-            #     break
-            # else:
             data += json_rsp.get('data').get('list', [])
             if len(json_rsp.get('data').get('list', [])) < 29:
                 break
@@ -65,7 +63,12 @@ class DanmuForward(bili_danmu.WsDanmuClient):
 
     async def alert_top_live(self):
         while(1):
-            data = await self.top_isalive()
+            try:
+                data = await self.top_isalive()
+            except ForbiddenError:
+                print('请求top_live时403, 等待0.5h')
+                await asyncio.sleep(60*30)
+                continue
             alive = set([i.get('username') for i in data if i.get('is_alive')])
             # not_alive = set([i.get('username') for i in data if not i.get('is_alive')])
             # 新增观看 alive - self.alive
