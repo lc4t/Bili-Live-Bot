@@ -72,7 +72,7 @@ class DanmuForward(bili_danmu.WsDanmuClient):
             # 新增观看 alive - self.alive
             # 不看了 self.alive - alive
             if alive != self.alive:
-                await self.forward_to_tg(f"在线更新【{','.join(list(alive - self.alive))}】")
+                await self.forward_to_tg(f"在线更新【{','.join(list(alive))}】")
                 self.alive = alive
             await asyncio.sleep(self.user.top_live_delay)
 
