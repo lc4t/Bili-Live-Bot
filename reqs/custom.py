@@ -56,18 +56,25 @@ class QQReq:
         data = {
             'authKey': auth_key
         }
-        json_rsp = await user.other_session.orig_req_json('POST', url, data=data)
-        return json_rsp
+        # json_rsp = await user.other_session.orig_req_json('POST', url, data=data)
+        # return json_rsp
+        async with user.other_session.session.request('POST', url, data=json.dumps(data)) as rsp:
+            body = await rsp.json()
+            return body
 
     @staticmethod
     async def verify(user, host, qq: int, session: str):
+        
         url = f'http://{host}/verify'
         data = {
             'sessionKey': session,
             'qq': qq,
         }
-        json_rsp = await user.other_session.orig_req_json('POST', url, data=data)
-        return json_rsp
+        async with user.other_session.session.request('POST', url, data=json.dumps(data)) as rsp:
+            body = await rsp.json()
+            return body
+        # json_rsp = await user.other_session.orig_req_json('POST', url, data=data)
+        # return json_rsp
 
     @staticmethod
     async def sendGroupMessage(user, host, session: str, target: int, messageChain: list = []):
@@ -77,8 +84,11 @@ class QQReq:
             'target': int(target),
             'messageChain': messageChain,
         }
-        json_rsp = await user.other_session.orig_req_json('POST', url, data=data)
-        return json_rsp
+        async with user.other_session.session.request('POST', url, data=json.dumps(data)) as rsp:
+            body = await rsp.json()
+            return body
+        # json_rsp = await user.other_session.orig_req_json('POST', url, data=data)
+        # return json_rsp
     
 
 
