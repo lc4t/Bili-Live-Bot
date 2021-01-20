@@ -58,6 +58,7 @@ class QQReq:
         }
         # json_rsp = await user.other_session.orig_req_json('POST', url, data=data)
         # return json_rsp
+        # print(url, data)
         async with user.other_session.session.request('POST', url, data=json.dumps(data)) as rsp:
             body = await rsp.json()
             return body
@@ -70,6 +71,7 @@ class QQReq:
             'sessionKey': session,
             'qq': qq,
         }
+        # print(url, data)
         async with user.other_session.session.request('POST', url, data=json.dumps(data)) as rsp:
             body = await rsp.json()
             return body
@@ -84,6 +86,7 @@ class QQReq:
             'target': int(target),
             'messageChain': messageChain,
         }
+        # print(url, data)
         async with user.other_session.session.request('POST', url, data=json.dumps(data)) as rsp:
             body = await rsp.json()
             return body

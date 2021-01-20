@@ -27,6 +27,7 @@ class DanmuForward(bili_danmu.WsDanmuClient):
         self.user = user
         self.GIFT_QUEUE = queue.Queue()
         self.is_live = False
+        self.qq_session = ''
         print(f'已关联用户{self.user.alias} -> {self._room_id}')
         await self._is_alive()
         print(self.user.tg_bot_token)
@@ -76,21 +77,25 @@ class DanmuForward(bili_danmu.WsDanmuClient):
                 self.alive = alive
             await asyncio.sleep(self.user.top_live_delay)
 
-    async def send_message_qq(self, target, messageChain, retry=3):
+    async def send_message_qq(self, target, messageChain, retry=5):
         if retry <= 0:
             return False
         # 获取session，判定是否可以用
-        json_rsp = await self.user.req_s(QQReq.sendGroupMessage, self.user, self.user.qq_host, self.user.qq_session, target, messageChain)
-        print(json_rsp)
+        json_rsp = await self.user.req_s(QQReq.sendGroupMessage, self.user, self.user.qq_host, self.qq_session, target, messageChain)
+        print('发送消息', json_rsp)
         code = json_rsp.get('code')
         if code == 0:
+            print('succ:', json_rsp)
             return json_rsp
         elif code == 3:
             # 需要verify,
             json_rsp = await self.user.req_s(QQReq.auth, self.user, self.user.qq_host, self.user.qq_key)
-            print(json_rsp)
-            self.user.qq_session = json_rsp.get('authKey')
-            await self.user.req_s(QQReq.verify, self.user, self.user.qq_host, self.user.qq_num, self.user.qq_session)
+            self.qq_session = json_rsp.get('session')
+            print('auth:', json_rsp)
+            return await self.send_message_qq(target, messageChain, retry-1)
+        elif code == 4:
+            json_rsp = await self.user.req_s(QQReq.verify, self.user, self.user.qq_host, self.user.qq_num, self.qq_session)
+            print('verify:', json_rsp)
             return await self.send_message_qq(target, messageChain, retry-1)
         else:
             print(json_rsp)
@@ -110,12 +115,12 @@ class DanmuForward(bili_danmu.WsDanmuClient):
                 danmu_user = info[2]
                 danmu_userid = danmu_user
 
-                for group in self.user.at_all_group:
-                    data = [
-                        {"type": "AtAll"},
-                        {"type": "Plain", "text": f"播了{self.is_live}"},
-                        ]
-                    await self.send_message_qq(group, data)
+                # for group in self.user.at_all_group:
+                #     data = [
+                #         {"type": "AtAll"},
+                #         {"type": "Plain", "text": f"播了{self.is_live}"},
+                #         ]
+                #     await self.send_message_qq(group, data)
 
                 data = {
                     'flag': flag,
@@ -203,7 +208,7 @@ class DanmuForward(bili_danmu.WsDanmuClient):
                     for group in self.user.at_all_group:
                         data = [
                             {"type": "AtAll"},
-                            {"type": "Plain", "text": "播了"},
+                            {"type": "Plain", "text": " 播了"},
                             ]
                         await self.send_message_qq(group, data)
                 self.is_live = True

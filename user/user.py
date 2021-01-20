@@ -27,7 +27,7 @@ class User:
         'dyn_lottery_friends',
         '_waiting_login', '_loop',
 
-        'qq_host', 'qq_key', 'qq_num', 'at_all_group', 'qq_session'
+        'qq_host', 'qq_key', 'qq_num', 'at_all_group'
 
 
     )
@@ -87,7 +87,6 @@ class User:
         # self.weight = dict_user.get('weight', 0)
         self.qq_host = dict_user.get('qq_host', '')
         self.qq_key = dict_user.get('qq_key', '')
-        self.qq_session = dict_user.get('qq_session', '')
         self.qq_num = dict_user.get('qq_num', 0)
         self.at_all_group = dict_user.get('at_all_group', [])
 
