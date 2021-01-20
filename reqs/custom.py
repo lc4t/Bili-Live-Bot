@@ -56,7 +56,7 @@ class QQReq:
         data = {
             'authKey': auth_key
         }
-        json_rsp = await user.other_session.request_json('POST', url, data=data)
+        json_rsp = await user.other_session.orig_req_json('POST', url, data=data)
         return json_rsp
 
     @staticmethod
@@ -66,7 +66,7 @@ class QQReq:
             'sessionKey': session,
             'qq': qq,
         }
-        json_rsp = await user.other_session.request_json('POST', url, data=data)
+        json_rsp = await user.other_session.orig_req_json('POST', url, data=data)
         return json_rsp
 
     @staticmethod
@@ -77,7 +77,7 @@ class QQReq:
             'target': int(target),
             'messageChain': messageChain,
         }
-        json_rsp = await user.other_session.request_json('POST', url, data=data)
+        json_rsp = await user.other_session.orig_req_json('POST', url, data=data)
         return json_rsp
     
 
