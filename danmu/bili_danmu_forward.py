@@ -12,7 +12,7 @@ from exceptions import ForbiddenError
 
 import telepot
 from printer import info as print
-from reqs.custom import TopUserReq
+from reqs.custom import TopUserReq, QQReq
 from reqs.utils import UtilsReq
 
 from danmu.bili_abc import bili_danmu
@@ -76,6 +76,25 @@ class DanmuForward(bili_danmu.WsDanmuClient):
                 self.alive = alive
             await asyncio.sleep(self.user.top_live_delay)
 
+    async def send_message_qq(self, target, messageChain, retry=3):
+        if retry <= 0:
+            return False
+        # 获取session，判定是否可以用
+        json_rsp = await self.user.req_s(QQReq.sendGroupMessage, self.user, self.user.qq_host, self.user.qq_session, target, messageChain)
+        code = json_rsp.get('code')
+        if code == 0:
+            return json_rsp
+        elif code == 3:
+            # 需要verify,
+            json_rsp = await self.user.req_s(QQReq.auth, self.user, self.user.qq_host, self.user.qq_key)
+            self.user.qq_session = json_rsp.get('authKey')
+            await self.user.req_s(QQReq.verify, self.user, self.user.qq_host, self.user.qq_num, self.user.qq_session)
+            return self.send_message_qq(target, messageChain, retry-1)
+        else:
+            print(json_rsp)
+            return json_rsp
+
+        
     async def handle_danmu(self, data: dict):
         cmd = data['cmd']
         # print(data)
@@ -88,6 +107,13 @@ class DanmuForward(bili_danmu.WsDanmuClient):
                 danmu_content = info[1]  # 弹幕内容
                 danmu_user = info[2]
                 danmu_userid = danmu_user
+
+                for group in self.user.at_all_group:
+                    data = [
+                        {"type": "AtAll"},
+                        {"type": "Plain", "text": f"播了{self.is_live}"},
+                        ]
+                    await self.send_message_qq(group, data)
 
                 data = {
                     'flag': flag,
@@ -171,6 +197,13 @@ class DanmuForward(bili_danmu.WsDanmuClient):
             elif cmd in ['LIVE']:
                 d = f'开播 {self._room_id}'
                 print(d)
+                if not self.is_live:
+                    for group in self.user.at_all_group:
+                        data = [
+                            {"type": "AtAll"},
+                            {"type": "Plain", "text": "播了"},
+                            ]
+                        await self.send_message_qq(group, data)
                 self.is_live = True
                 await self.forward_to_tg(d)
             elif cmd in ['PREPARING']:

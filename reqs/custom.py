@@ -1,5 +1,5 @@
 from bili_global import API_LIVE
-
+import json
 import utils
 
 
@@ -48,3 +48,37 @@ class TopUserReq:
         url = f'{API_LIVE}/xlive/app-room/v2/guardTab/topList?roomid={room_id}&page={page}&ruid={uid}&page_size=29'
         json_rsp = await user.other_session.request_json('GET', url, headers=user.pc.headers)
         return json_rsp
+
+class QQReq:
+    @staticmethod
+    async def auth(user, host: str, auth_key: str):
+        url = f'http://{host}/auth'
+        data = {
+            'authKey': auth_key
+        }
+        json_rsp = await user.other_session.request_json('POST', url, headers={'Content-Type': 'application/json'},data=json.dumps(data))
+        return json_rsp
+
+    @staticmethod
+    async def verify(user, host, qq: int, session: str):
+        url = f'http://{host}/verify'
+        data = {
+            'sessionKey': session,
+            'qq': qq,
+        }
+        json_rsp = await user.other_session.request_json('POST', url, headers={'Content-Type': 'application/json'},data=json.dumps(data))
+        return json_rsp
+
+    @staticmethod
+    async def sendGroupMessage(user, host, session: str, target: int, messageChain: list = []):
+        url = f'http://{host}/sendGroupMessage'
+        data = {
+            'sessionKey': session,
+            'target': int(target),
+            'messageChain': messageChain,
+        }
+        json_rsp = await user.other_session.request_json('POST', url, headers={'Content-Type': 'application/json'},data=json.dumps(data))
+        return json_rsp
+    
+
+
