@@ -81,12 +81,14 @@ class DanmuForward(bili_danmu.WsDanmuClient):
             return False
         # 获取session，判定是否可以用
         json_rsp = await self.user.req_s(QQReq.sendGroupMessage, self.user, self.user.qq_host, self.user.qq_session, target, messageChain)
+        print(json_rsp)
         code = json_rsp.get('code')
         if code == 0:
             return json_rsp
         elif code == 3:
             # 需要verify,
             json_rsp = await self.user.req_s(QQReq.auth, self.user, self.user.qq_host, self.user.qq_key)
+            print(json_rsp)
             self.user.qq_session = json_rsp.get('authKey')
             await self.user.req_s(QQReq.verify, self.user, self.user.qq_host, self.user.qq_num, self.user.qq_session)
             return self.send_message_qq(target, messageChain, retry-1)
