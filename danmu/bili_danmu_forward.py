@@ -91,7 +91,7 @@ class DanmuForward(bili_danmu.WsDanmuClient):
             print(json_rsp)
             self.user.qq_session = json_rsp.get('authKey')
             await self.user.req_s(QQReq.verify, self.user, self.user.qq_host, self.user.qq_num, self.user.qq_session)
-            return self.send_message_qq(target, messageChain, retry-1)
+            return await self.send_message_qq(target, messageChain, retry-1)
         else:
             print(json_rsp)
             return json_rsp
