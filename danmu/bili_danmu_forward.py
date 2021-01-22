@@ -32,6 +32,7 @@ class DanmuForward(bili_danmu.WsDanmuClient):
         await self._is_alive()
         print(self.user.tg_bot_token)
         self.bot = telepot.Bot(self.user.tg_bot_token)
+        self.last_leave_time = datetime.datetime.now() - datetime.timedelta(hours=99) # 下播时间, 如果开播时间-下播时间在5min内，就不再提醒开播
 
     async def _is_alive(self):
         json_rsp = await self.user.req_s(UtilsReq.init_room, self.user, self._room_id)
@@ -204,7 +205,8 @@ class DanmuForward(bili_danmu.WsDanmuClient):
             elif cmd in ['LIVE']:
                 d = f'开播 {self._room_id}'
                 print(d)
-                if not self.is_live:
+                delta = datetime.datetime.now() - self.last_leave_time
+                if not self.is_live and delta.total_seconds() > 60 * 5:
                     for group in self.user.at_all_group:
                         data = [
                             {"type": "AtAll"},
@@ -216,6 +218,7 @@ class DanmuForward(bili_danmu.WsDanmuClient):
             elif cmd in ['PREPARING']:
                 d = f'下播 {self._room_id}'
                 print(d)
+                self.last_leave_time = datetime.datetime.now()
                 self.is_live = False
                 await self.forward_to_tg(d)
             elif cmd.startswith('PK_'):
