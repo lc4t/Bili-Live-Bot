@@ -107,7 +107,7 @@ class DanmuForward(bili_danmu.WsDanmuClient):
         # print(data)
         now = datetime.datetime.now()
         fname = f'log/{self._room_id}-{now.year}{now.month}{now.day}.log.json'
-        open('fname', 'a').write(str(data) + '\n')
+        open(fname, 'a').write(str(data) + '\n')
         try:
             if cmd == 'DANMU_MSG':
 
