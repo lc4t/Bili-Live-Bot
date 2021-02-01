@@ -8,11 +8,11 @@ import random
 import re
 import time
 import traceback
-from exceptions import ForbiddenError
 
 import telepot
+from exceptions import ForbiddenError
 from printer import info as print
-from reqs.custom import TopUserReq, QQReq
+from reqs.custom import QQReq, TopUserReq
 from reqs.utils import UtilsReq
 
 from danmu.bili_abc import bili_danmu
@@ -32,7 +32,7 @@ class DanmuForward(bili_danmu.WsDanmuClient):
         await self._is_alive()
         print(self.user.tg_bot_token)
         self.bot = telepot.Bot(self.user.tg_bot_token)
-        self.last_leave_time = datetime.datetime.now() - datetime.timedelta(hours=99) # 下播时间, 如果开播时间-下播时间在5min内，就不再提醒开播
+        self.last_leave_time = datetime.datetime.now() - datetime.timedelta(hours=99)  # 下播时间, 如果开播时间-下播时间在5min内，就不再提醒开播
 
     async def _is_alive(self):
         json_rsp = await self.user.req_s(UtilsReq.init_room, self.user, self._room_id)
@@ -102,11 +102,12 @@ class DanmuForward(bili_danmu.WsDanmuClient):
             print(json_rsp)
             return json_rsp
 
-        
     async def handle_danmu(self, data: dict):
         cmd = data['cmd']
         # print(data)
-        open('log.log', 'a').write(str(data) + '\n')
+        now = datetime.datetime.now()
+        fname = f'{self._room_id}-{now.year}{now.month}{now.day}.log.json'
+        open('fname', 'a').write(str(data) + '\n')
         try:
             if cmd == 'DANMU_MSG':
 
@@ -180,6 +181,9 @@ class DanmuForward(bili_danmu.WsDanmuClient):
             elif cmd in ['ROOM_REAL_TIME_MESSAGE_UPDATE', 'ROOM_BANNER', 'WIDGET_BANNER', 'ONLINE_RANK_COUNT', 'ONLINE_RANK_TOP3', ]:
                 # 房间公告
                 pass
+            elif cmd in ['HOT_RANK_SETTLEMENT', 'HOT_RANK_CHANGED']:
+                # 房间热度变化
+                pass
             # elif cmd in ['WELCOME_GUARD', 'WELCOME', 'NOTICE_MSG', 'SYS_GIFT',
             #              'ACTIVITY_BANNER_UPDATE_BLS', 'ENTRY_EFFECT', 'ROOM_RANK',
             #              'ACTIVITY_BANNER_UPDATE_V2', 'COMBO_END', 'ROOM_REAL_TIME_MESSAGE_UPDATE',
@@ -211,7 +215,7 @@ class DanmuForward(bili_danmu.WsDanmuClient):
                         data = [
                             {"type": "AtAll"},
                             {"type": "Plain", "text": " 播了"},
-                            ]
+                        ]
                         await self.send_message_qq(group, data)
                 self.is_live = True
                 await self.forward_to_tg(d)
