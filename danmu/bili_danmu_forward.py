@@ -216,7 +216,15 @@ class DanmuForward(bili_danmu.WsDanmuClient):
                             {"type": "AtAll"},
                             {"type": "Plain", "text": f" 播, 快来看 https://live.bilibili.com/{self._room_id}"},
                         ]
-                        await self.send_message_qq(group, data)
+                        for t in range(2):
+                            try:
+                                await self.send_message_qq(group, data)
+                                break
+                            except:
+                                await asyncio.sleep(1)
+                                continue
+                        await asyncio.sleep(0.5)
+
                 self.is_live = True
                 await self.forward_to_tg(d)
             elif cmd in ['PREPARING']:
