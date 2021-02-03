@@ -214,7 +214,7 @@ class DanmuForward(bili_danmu.WsDanmuClient):
                     for group in self.user.at_all_group:
                         data = [
                             {"type": "AtAll"},
-                            {"type": "Plain", "text": f" 播了 https://live.bilibili.com/{self._room_id}"},
+                            {"type": "Plain", "text": f" 播, 快来看 https://live.bilibili.com/{self._room_id}"},
                         ]
                         await self.send_message_qq(group, data)
                 self.is_live = True
