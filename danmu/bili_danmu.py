@@ -1,10 +1,11 @@
 import json
+import traceback
 from struct import Struct
 from typing import Optional
 
 from aiohttp import ClientSession
-
 from printer import info as print
+
 from .client import Client
 from .conn import WsConn
 
@@ -68,8 +69,13 @@ class WsDanmuClient(Client):
                 pass
             # cmd
             elif opt == 5:
-                if not await self.handle_danmu(json.loads(body.decode('utf-8'))):
-                    return False
+                try:
+                    if not await self.handle_danmu(json.loads(body.decode('utf-8'))):
+                        return False
+                except UnicodeDecodeError:
+                    # traceback.print_exc()
+                    print('error')
+                    return True
             # 握手确认
             elif opt == 8:
                 print(f'{self._area_id}号数据连接进入房间（{self._room_id}）')

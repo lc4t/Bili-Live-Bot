@@ -1,10 +1,12 @@
 # 不具有任何意义,仅仅是常见func
 
-from random import randint
 import time
+from random import randint
+
 from bili_global import API_LIVE
+from json_rsp_ctrl import LOGOUT_101_CTRL, ZERO_ONLY_CTRL
+
 import utils
-from json_rsp_ctrl import ZERO_ONLY_CTRL, LOGOUT_101_CTRL
 
 
 class UtilsReq:
@@ -98,6 +100,7 @@ class UtilsReq:
             'csrf_token': user.dict_bili['csrf'],
             'csrf': user.dict_bili['csrf']
         }
+        print(data)
         json_rsp = await user.bililive_session.request_json('POST', url, headers=user.dict_bili['pcheaders'], data=data)
         return json_rsp
 

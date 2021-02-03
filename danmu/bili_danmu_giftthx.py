@@ -1,14 +1,15 @@
-from .bili_danmu import WsDanmuClient
 import asyncio
-import traceback
-import json
 import datetime
+import json
+import queue
 import random
 import time
-import queue
+import traceback
+
 from printer import info as print
 from reqs.utils import UtilsReq
 
+from .bili_danmu import WsDanmuClient
 
 DELAY = 0
 
@@ -162,14 +163,12 @@ class DanmuGiftThx(WsDanmuClient):
         while(1):
             try:
                 if self.pk_end_time > time.time() or not self.end:
-                    # print(
-                    #     f'PK还有{self.pk_end_time - time.time()}s结束, 分差{self.pk_op_votes-self.pk_me_votes}')
-                    if self.pk_end_time - time.time() < 1 and self.pk_op_votes - self.pk_me_votes >= 0 and self.pk_end_time - time.time() > -5:
-                        # print(f'开启偷塔, 时限{self.pk_end_time - time.time()}')
-                        # print(f'当前分差{self.pk_op_votes-self.pk_me_votes}')
+                    # print(f'PK还有{self.pk_end_time - time.time()}s结束, 分差{self.pk_op_votes-self.pk_me_votes}')
+                    if self.pk_end_time - time.time() < 4 and self.pk_op_votes - self.pk_me_votes >= 0 and self.pk_end_time - time.time() > -5:
+                        print(f'开启偷塔, 时限{self.pk_end_time - time.time()}')
+                        print(f'当前分差{self.pk_op_votes-self.pk_me_votes}')
                         if self.pk_op_votes - self.pk_me_votes > self.user.pk_max_votes or self.pk_now_use > self.user.pk_max_votes:
-                            # print('超额了', self.pk_op_votes - self.pk_me_votes,
-                            #       self.user.pk_max_votes, self.pk_now_use, self.user.pk_max_votes)
+                            # print('超额了', self.pk_op_votes - self.pk_me_votes, self.user.pk_max_votes, self.pk_now_use, self.user.pk_max_votes)
                             continue
                         need = ((self.pk_op_votes-self.pk_me_votes)/self.user.pk_gift_rank)+3
                         gift_id = self.user.pk_gift_id  # 这个礼物是52分 20014
@@ -177,9 +176,9 @@ class DanmuGiftThx(WsDanmuClient):
                         print(f'赠送{need}个{self.user.pk_gift_id}')
                         # print(UtilsReq.send_gold, self.user, gift_id, gift_num, self._room_id, ruid)
                         self.pk_now_use += self.user.pk_gift_rank*need
-                        json_rsp = await self.user.req_s(UtilsReq.send_gold, self.user, gift_id, gift_num, self._room_id, ruid)
+                        json_rsp = await self.user.req_s(UtilsReq.send_gold, self.user, gift_id, int(gift_num)+1, self._room_id, ruid)
                         # status = json_rsp.get('data', {}).get('live_status')
-                        # print(json_rsp)
+                        print(json_rsp)
 
                         # continue
                         # await asyncio.sleep(0.1)
@@ -294,6 +293,9 @@ class DanmuGiftThx(WsDanmuClient):
                 print(data)
             # elif cmd in ['WELCOME_GUARD', 'WELCOME', 'NOTICE_MSG', 'SYS_GIFT', 'ACTIVITY_BANNER_UPDATE_BLS', 'ENTRY_EFFECT', 'ROOM_RANK', 'ACTIVITY_BANNER_UPDATE_V2', 'COMBO_END', 'ROOM_REAL_TIME_MESSAGE_UPDATE', 'ROOM_BLOCK_MSG', 'WISH_BOTTLE', 'WEEK_STAR_CLOCK', 'ROOM_BOX_MASTER', 'HOUR_RANK_AWARDS', 'ROOM_SKIN_MSG', 'RAFFLE_START', 'RAFFLE_END', 'GUARD_LOTTERY_START', 'GUARD_LOTTERY_END', 'GUARD_MSG', 'USER_TOAST_MSG', 'SYS_MSG', 'COMBO_SEND', 'ROOM_BOX_USER', 'TV_START', 'TV_END', 'ANCHOR_LOT_END', 'ANCHOR_LOT_AWARD', 'ANCHOR_LOT_CHECKSTATUS', 'ANCHOR_LOT_STAR', 'ROOM_CHANGE', 'LIVE', 'new_anchor_reward', 'room_admin_entrance', 'ROOM_ADMINS', 'PREPARING']:
             #     pass
+            elif cmd in ['HOT_RANK_CHANGED']:
+                pass
+
             else:
                 print(data)
         except:
