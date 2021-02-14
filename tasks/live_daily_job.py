@@ -3,7 +3,6 @@ import asyncio
 from .utils import UtilsTask
 from reqs.live_daily_job import (
     HeartBeatReq,
-    RecvHeartGiftReq,
     OpenSilverBoxReq,
     RecvDailyBagReq,
     SignReq,
@@ -21,40 +20,23 @@ class HeartBeatTask(Sched, DontWait, Unique):
     @staticmethod
     async def check(_):
         return (-2, (0, 30)),
-
+        
     @staticmethod
     async def work(user):
         while True:
             json_rsp0 = await user.req_s(HeartBeatReq.pc_heartbeat, user)
             json_rsp1 = await user.req_s(HeartBeatReq.app_heartbeat, user)
-            # user.info(f'心跳包(5分钟左右间隔){json_rsp0} {json_rsp1}')
+            user.info(f'心跳包(5分钟左右间隔){json_rsp0} {json_rsp1}')
             await asyncio.sleep(300)
-
-
-class RecvHeartGiftTask(Sched, DontWait, Unique):
-    TASK_NAME = 'recv_heart_gift'
-
-    @staticmethod
-    async def check(_):
-        return (-2, (0, 30)),
-
-    @staticmethod
-    async def work(user):
-        while True:
-            json_rsp = await user.req_s(RecvHeartGiftReq.recv_heartgift, user)
-            if json_rsp['code'] == 400:
-                user.fall_in_jail()
-                return
-            await asyncio.sleep(300)
-
-
+ 
+               
 class OpenSilverBoxTask(Sched, DontWait, Unique):
     TASK_NAME = 'open_silver_box'
 
     @staticmethod
     async def check(_):
         return (-2, (0, 30)),
-
+                
     @staticmethod
     async def work(user):
         while True:
@@ -88,14 +70,14 @@ class OpenSilverBoxTask(Sched, DontWait, Unique):
                 user.info("今日宝箱领取完毕")
                 return
 
-
+                
 class RecvDailyBagTask(Sched, DontWait, Unique):
     TASK_NAME = 'recv_daily_bag'
 
     @staticmethod
     async def check(_):
         return (-2, (0, 30)),
-
+        
     @staticmethod
     async def work(user):
         json_rsp = await user.req_s(RecvDailyBagReq.recv_dailybag, user)
@@ -106,29 +88,32 @@ class RecvDailyBagTask(Sched, DontWait, Unique):
         for i in json_rsp['data']['bag_list']:
             user.info(f'获得-{i["bag_name"]}-成功')
 
-
+                
 class SignTask(Sched, DontWait, Unique):
     TASK_NAME = 'sign'
 
     @staticmethod
     async def check(_):
         return (-2, (0, 30)),
-
+        
     @staticmethod
     async def work(user):
         json_rsp = await user.req_s(SignReq.sign, user)
-        # user.info(f'签到状态: {json_rsp["message"]}')
-
-
+        user.info(f'签到状态: {json_rsp["message"]}')
+        
+        
 class WatchTvTask(Sched, DontWait, Unique):
     TASK_NAME = 'watch_tv'
 
     @staticmethod
     async def check(_):
         return (-2, (0, 30)),
-
+   
     @staticmethod
     async def work(user):
+        await user.req_s(WatchTvReq.get_info_by_user_app, user)
+        await user.req_s(WatchTvReq.get_info_by_user_pc, user)
+
         while True:
             # -400 done/not yet
             json_rsp = await user.req_s(WatchTvReq.watch_tv, user)
@@ -137,15 +122,15 @@ class WatchTvTask(Sched, DontWait, Unique):
                 return
             sleeptime = 350
             await asyncio.sleep(sleeptime)
-
-
+        
+        
 class SignFansGroupsTask(Sched, DontWait, Unique):
     TASK_NAME = 'sign_fans_group'
 
     @staticmethod
     async def check(_):
         return (-2, (0, 30)),
-
+   
     @staticmethod
     async def work(user):
         json_rsp = await user.req_s(SignFansGroupsReq.fetch_groups, user)
@@ -161,8 +146,8 @@ class SignFansGroupsTask(Sched, DontWait, Unique):
                     user.info(f'应援团 {group_id} 应援成功,获得 {data["add_num"]} 点亲密度')
             else:
                 user.info(f'应援团 {group_id} 应援失败')
-
-
+            
+            
 class SendGiftTask(Sched, DontWait, Unique):
     TASK_NAME = 'send_gift'
 
@@ -181,13 +166,13 @@ class SendGiftTask(Sched, DontWait, Unique):
                 if price >= 100:  # 猜测小于 100 的不会增加亲密度（错了大不了不送了，嘻嘻）
                     gift_intimacy[gift['id']] = price / 100
         return gift_intimacy
-
+        
     @staticmethod
     async def fetch_giftbags(user):
         gift_bags = await UtilsTask.fetch_giftbags(user)
         return [[gift_id, gift_num, bag_id, left_time]
                 for bag_id, gift_id, gift_num, _, left_time in gift_bags]
-
+        
     @staticmethod
     async def fetch_wearing_medal(user):
         json_rsp = await user.req_s(SendGiftReq.fetch_wearing_medal, user)
@@ -199,7 +184,7 @@ class SendGiftTask(Sched, DontWait, Unique):
                 medal_name = data['medal_name']
                 return room_id, remain_intimacy, medal_name
         return None
-
+    
     @staticmethod
     async def send_expiring_gift(user, gift_intimacy: dict):
         if not user.task_ctrl['clean-expiring-gift']:
@@ -219,13 +204,13 @@ class SendGiftTask(Sched, DontWait, Unique):
                 print('正在清理过期礼物到用户勋章')
                 medals = await UtilsTask.fetch_medals(user)
                 expiring_giftbags = await SendGiftTask.fill_intimacy(user, expiring_giftbags, medals, gift_intimacy)
-
+                
             print('正在清理过期礼物到指定房间')
             for gift_id, gift_num, bag_id in expiring_giftbags:
                 await UtilsTask.send_gift(user, room_id, gift_num, bag_id, gift_id)
         else:
             print('未发现即将过期的礼物')
-
+    
     @staticmethod
     async def send_medal_gift(user, gift_intimacy: dict):
         medals = []
@@ -240,7 +225,7 @@ class SendGiftTask(Sched, DontWait, Unique):
         if send2medal_by_uid:
             medals += await UtilsTask.fetch_medals(user, send2medal_by_uid)
         # print('目前的勋章', medals)
-
+        
         print('正在投递勋章')
         gift_bags = await SendGiftTask.fetch_giftbags(user)
         # print(temp)
@@ -252,7 +237,7 @@ class SendGiftTask(Sched, DontWait, Unique):
             if gift_id not in (4, 3, 9, 10) and left_time is not None:
                 send_giftbags.append(gift[:3])
         await SendGiftTask.fill_intimacy(user, send_giftbags, medals, gift_intimacy)
-
+        
     @staticmethod
     async def fill_intimacy(user, gift_bags, medals, gift_intimacy: dict):
         gift_bags = [list(gift) for gift in gift_bags]  # gift_bags 元素必须是 list！！！！
@@ -280,20 +265,21 @@ class SendGiftTask(Sched, DontWait, Unique):
                     f'勋章 {medal_name} 本次提升{init_remain_intimacy-remain_intimacy}亲密度，离上限还剩{remain_intimacy}')
 
         return [gift for gift in gift_bags if gift[1]]  # 过滤掉送光了的礼物包
-
+        
     @staticmethod
     async def work(user, gift_intimacy: dict):
         await SendGiftTask.send_medal_gift(user, gift_intimacy)
+        await asyncio.sleep(7)
         await SendGiftTask.send_expiring_gift(user, gift_intimacy)
 
-
+                
 class ExchangeSilverCoinTask(Sched, DontWait, Unique):
     TASK_NAME = 'exchange_silver_coin'
 
     @staticmethod
     async def check(_):
         return (-2, (0, 30)),
-
+     
     @staticmethod
     async def work(user):
         if not user.task_ctrl['silver2coin']:

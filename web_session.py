@@ -15,6 +15,7 @@ class WebSession:
     __slots__ = ('session',)
 
     DEFAULT_OK_STATUS_CODES = (200,)
+    DEFAULT_IGNORE_STATUS_CODES = ()
 
     def __init__(self):
         self.session = aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=4))
@@ -30,6 +31,10 @@ class WebSession:
     @staticmethod
     async def _recv_bytes(rsp: aiohttp.ClientResponse):
         return await rsp.read()
+
+    @staticmethod
+    async def _recv(rsp: aiohttp.ClientResponse):
+        return rsp
 
     # 基本就是通用的 request
     async def _orig_req(self, parse_rsp, method, url, **kwargs):
@@ -58,9 +63,11 @@ class WebSession:
         return await self._orig_req(self._recv_json, method, url, **kwargs)
 
     # 为 bilibili 这边加了一些东西的 request
-    async def _req(self, parse_rsp, method, url, ok_status_codes=None, **kwargs):
+    async def _req(self, parse_rsp, method, url, ok_status_codes=None, ignore_status_codes=None, **kwargs):
         if ok_status_codes is None:
             ok_status_codes = self.DEFAULT_OK_STATUS_CODES
+        if ignore_status_codes is None:
+            ignore_status_codes = self.DEFAULT_IGNORE_STATUS_CODES
         async with sem:
             i = 0
             while True:
@@ -74,6 +81,8 @@ class WebSession:
                             body = await parse_rsp(rsp)
                             if body:  # 有时候是 None 或空，直接屏蔽。read 或 text 类似，禁止返回空的东西
                                 return body
+                        elif rsp.status in ignore_status_codes:
+                            continue
                         elif rsp.status in (412, 403):
                             printer.warn(f'403频繁, {url}, {kwargs}')
                             raise ForbiddenError(msg=url)
@@ -115,3 +124,10 @@ class WebSession:
                            url,
                            **kwargs) -> str:
         return await self._req(self._recv_str, method, url, **kwargs)
+
+    # 返回 response
+    async def request(self,
+                      method,
+                      url,
+                      **kwargs) -> aiohttp.ClientResponse:
+        return await self._req(self._recv, method, url, **kwargs)

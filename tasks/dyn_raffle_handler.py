@@ -46,45 +46,19 @@ class DynRaffleUtilsTask:
 
     @staticmethod
     async def check_and_fetch_raffle(user, doc_id, handle_status=-1, feed_limit=False) -> tuple:
-        json_rsp = await user.req_s(DynRaffleHandlerReq.is_dyn_raffle, user, doc_id)
+        # monitor暴力搜索时候判断是否到达终点/删除
+        json_rsp = await user.req_s(DynRaffleHandlerReq.check_dyn_detail, user, doc_id)
         code = json_rsp['code']
-        print('_____________________________________')
-        print('is_dyn_raffle:', doc_id, 'code:', code)
-        if not code:
-            data = json_rsp['data']
-            item = data['item']
-            str_ext = item['extension']
-            print(doc_id, str_ext)
-            if str_ext:
-                try:
-                    dict_ext = json.loads(str_ext.replace('\'', ''))
-                except json.JSONDecodeError:
-                    print(f'dict_extension 解析失败，可能是b站api已知问题')
-                    if len(str_ext) != 1024:
-                        # TODO 可能还有doc_id=21426429 "extension":"{\"emoji_type\":1}{\"emoji_type\":1}"
-                        user.warn(f'动态抽奖{doc_id}dict_extension 解析失败', str_ext)
-                    return 1, None
 
-                # 抽奖 不符合的可能{}或者lott_cfg为空或者其他一些
-                if 'lott_cfg' in dict_ext and dict_ext['lott_cfg']:
-                    lott_cfg_x = dict_ext['lott_cfg']
-                    if isinstance(lott_cfg_x, dict):
-                        lott_cfg = lott_cfg_x
-                    elif isinstance(lott_cfg_x, str):
-                        lott_cfg = json.loads(lott_cfg_x)
-                    else:
-                        return -1, None
-                    print('lott_cfg', lott_cfg)
-                    if 'lottery_id' in lott_cfg:
-                        uid = data['user']['uid']
-                        post_time = int(item['upload_timestamp'])
-                        describe = item['description']
-                    else:
-                        return 1, None
-                else:
-                    return 1, None
-            else:
+        if not code:
+            item = json_rsp['data']['item']
+
+            uid = item['poster_uid']
+            post_time = int(item['upload_timestamp'])
+            # 有时description不存在的
+            if 'description' not in item:
                 return 1, None
+            describe = item['description']
         elif code == 110001:
             if 'user' not in json_rsp['data']:
                 return 404, None
@@ -96,6 +70,10 @@ class DynRaffleUtilsTask:
 
         json_rsp = await user.req_s(DynRaffleHandlerReq.fetch_dyn_raffle, user, doc_id)
         code = json_rsp['code']
+
+        print('_____________________________________')
+        print('is_dyn_raffle:', doc_id, 'code:', code)
+
         if not code:
             # print('check raffle_status', json_rsp)
             data = json_rsp['data']
@@ -137,8 +115,8 @@ class DynRaffleUtilsTask:
             print('获取到的抽奖信息为', dyn_raffle_status)
             return 0, dyn_raffle_status
         elif code == -9999:
-            print(f'抽奖动态{doc_id}已经删除')
-            return 404, None
+            print(f'抽奖动态{doc_id}已经删除或者非抽奖动态')
+            return 1, None
         user.warn(f'互动抽奖初步查询 {json_rsp}')
         return -1, None
 
@@ -275,11 +253,11 @@ class DynRaffleJoinTask(Forced, Wait, Multi):
                 for i in range(5):  # 经常不能及时刷新
                     await asyncio.sleep(3)
                     dyn_id = await DynRaffleJoinTask.fetch_reposted_dynid(
-                        user, user.dict_bili['uid'], dyn_raffle_status.dyn_id)
+                        user, user.dict_user['uid'], dyn_raffle_status.dyn_id)
                     if dyn_id is not None:
                         user.info(f'查找转发动态{dyn_raffle_status.dyn_id}生成{dyn_id}')
                         dyn_raffle_joined = DynRaffleJoined(
-                            dyn_id=dyn_id, orig_dynid=dyn_raffle_status.dyn_id, uid=user.dict_bili['uid'])
+                            dyn_id=dyn_id, orig_dynid=dyn_raffle_status.dyn_id, uid=user.dict_user['uid'])
                         print(dyn_raffle_joined)
                         dyn_raffle_sql.insert_dynraffle_joined_table(dyn_raffle_joined)
                         return
@@ -306,7 +284,7 @@ class DynRaffleNoticeTask(Forced, Wait, Multi):
 
     @staticmethod
     async def work(user, dyn_raffle_status: DynRaffleStatus, dyn_raffle_results: Optional[DynRaffleResults]):
-        int_user_uid = int(user.dict_bili['uid'])
+        int_user_uid = int(user.dict_user['uid'])
         async with user.repost_del_lock:
             dyn_raffle_joined = dyn_raffle_sql.select_by_primary_key_from_dynraffle_joined_table(
                 uid=int_user_uid, orig_dynid=dyn_raffle_status.dyn_id)

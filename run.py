@@ -16,7 +16,7 @@ from tasks.live_daily_job import (
     HeartBeatTask,
     # OpenSilverBoxTask,
     # RecvDailyBagTask,
-    SignTask,
+    # SignTask,
     # WatchTvTask,
     # SignFansGroupsTask,
     # SendGiftTask,
@@ -85,7 +85,7 @@ def add_daily_jobs():
     bili_sched.add_daily_jobs(HeartBeatTask, every_hours=6)
     # bili_sched.add_daily_jobs(OpenSilverBoxTask, every_hours=6)
     # bili_sched.add_daily_jobs(RecvDailyBagTask, every_hours=3)
-    bili_sched.add_daily_jobs(SignTask, every_hours=6)
+    # bili_sched.add_daily_jobs(SignTask, every_hours=6)
     # bili_sched.add_daily_jobs(WatchTvTask, every_hours=6)
     # bili_sched.add_daily_jobs(SignFansGroupsTask, every_hours=6)
     # bili_sched.add_daily_jobs(SendGiftTask, every_hours=2)
