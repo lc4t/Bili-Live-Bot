@@ -8,7 +8,7 @@ class TvRaffleHandlerReq:
         url = f'{API_LIVE}/xlive/lottery-interface/v1/lottery/Check?roomid={real_roomid}'
         json_rsp = await user.bililive_session.request_json('GET', url, ctrl=ZERO_ONLY_CTRL)
         return json_rsp
-
+        
     @staticmethod
     async def join(user, real_roomid, raffle_id, raffle_type):
         url = f"{API_LIVE}/xlive/lottery-interface/v5/smalltv/join"

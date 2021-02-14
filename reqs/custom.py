@@ -1,6 +1,5 @@
-from bili_global import API_LIVE
-import json
 import utils
+from bili_global import API_LIVE
 
 
 class BuyLatiaoReq:
@@ -40,6 +39,7 @@ class BanUserReq:
         }
         json_rsp = await user.other_session.request_json('POST', url, data=data, headers=user.pc.headers)
         return json_rsp
+
 
 
 class TopUserReq:
@@ -93,5 +93,3 @@ class QQReq:
         # json_rsp = await user.other_session.orig_req_json('POST', url, data=data)
         # return json_rsp
     
-
-

@@ -27,7 +27,7 @@ class DynRaffleHandlerReq:
     async def repost_dyn(user, orig_dynid, content, at_uids, ctrl):
         url = 'https://api.vc.bilibili.com/dynamic_repost/v1/dynamic_repost/repost'
         data = {
-            'uid': {user.dict_bili['uid']},
+            'uid': {user.dict_user['uid']},
             'dynamic_id': int(orig_dynid),
             'content': content,
             'at_uids': at_uids,
@@ -58,7 +58,7 @@ class DynRaffleHandlerReq:
     async def del_dyn_by_dynid(user, dyn_id):
         url = 'https://api.vc.bilibili.com/dynamic_repost/v1/dynamic_repost/rm_rp_dyn'
         payload = {
-            'uid': user.dict_bili['uid'],
+            'uid': user.dict_user['uid'],
             'dynamic_id': dyn_id,
             'csrf_token': user.dict_user['csrf'],
         }
@@ -67,7 +67,7 @@ class DynRaffleHandlerReq:
         return json_rsp
 
     @staticmethod
-    async def is_dyn_raffle(user, doc_id):
+    async def check_dyn_detail(user, doc_id):
         url = f'https://api.vc.bilibili.com/link_draw/v1/doc/detail?doc_id={doc_id}'
         json_rsp = await user.other_session.request_json('GET', url)
         return json_rsp

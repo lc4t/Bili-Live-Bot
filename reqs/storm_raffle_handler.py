@@ -22,7 +22,7 @@ class StormRaffleHandlerReq:
         }
         json_rsp = await user.bililive_session.request_json('POST', url, data=data, headers=user.pc.headers)
         return json_rsp
-
+   
     @staticmethod
     async def join(user, raffle_id):
         extra_params = {

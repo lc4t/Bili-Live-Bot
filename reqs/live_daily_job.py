@@ -10,7 +10,7 @@ class HeartBeatReq:
         data = {
             "csrf_token": user.dict_user['csrf'],
             "csrf": user.dict_user['csrf']
-        }
+            }
         json_rsp = await user.bililive_session.request_json('POST', url, data=data, headers=user.pc.headers)
         return json_rsp
 
@@ -26,15 +26,7 @@ class HeartBeatReq:
         json_rsp = await user.bililive_session.request_json('POST', url, data=payload, headers=user.app.headers, params=params)
         return json_rsp
 
-
-class RecvHeartGiftReq:
-    @staticmethod
-    async def recv_heartgift(user):
-        url = f"{API_LIVE}/gift/v2/live/heart_gift_receive?roomid=3&area_v2_id=34"
-        json_rsp = await user.bililive_session.request_json('GET', url, headers=user.pc.headers)
-        return json_rsp
-
-
+                
 class OpenSilverBoxReq:
     @staticmethod
     async def check(user):
@@ -43,7 +35,7 @@ class OpenSilverBoxReq:
         # {'code': -10017, 'msg': '今天所有的宝箱已经领完!', 'message': '今天所有的宝箱已经领完!', ...}
         json_rsp = await user.bililive_session.request_json('GET', url, headers=user.pc.headers)
         return json_rsp
-
+    
     @staticmethod
     async def join(user):  # 此 api 限制必须绑定手机号
         extra_params = {
@@ -59,7 +51,7 @@ class OpenSilverBoxReq:
         url = f'{API_LIVE}/lottery/v1/SilverBox/getAward'
         json_rsp = await user.bililive_session.request_json('GET', url, headers=user.app.headers, params=params)
         return json_rsp
-
+        
 
 class RecvDailyBagReq:
     @staticmethod
@@ -67,16 +59,16 @@ class RecvDailyBagReq:
         url = f'{API_LIVE}/gift/v2/live/receive_daily_bag'
         json_rsp = await user.bililive_session.request_json('GET', url, headers=user.pc.headers)
         return json_rsp
-
-
+        
+        
 class SignReq:
     @staticmethod
     async def sign(user):
         url = f'{API_LIVE}/sign/doSign'
         json_rsp = await user.bililive_session.request_json('GET', url, headers=user.pc.headers)
         return json_rsp
-
-
+        
+        
 class WatchTvReq:
     @staticmethod
     async def watch_tv(user):
@@ -85,18 +77,39 @@ class WatchTvReq:
         json_rsp = await user.bililive_session.request_json('POST', url, data=data, headers=user.app.headers)
         return json_rsp
 
+    @staticmethod
+    async def get_info_by_user_pc(user):
+        url = f'{API_LIVE}/xlive/web-room/v1/index/getInfoByUser?room_id=23058'
+        # {"code": -101, "message": "账号未登录", "ttl": 1}
+        json_rsp = await user.bililive_session.request_json('GET', url, headers=user.pc.headers)
+        return json_rsp
 
+    @staticmethod
+    async def get_info_by_user_app(user):
+        url = f'{API_LIVE}/xlive/app-room/v1/index/getInfoByUser'
+        # {"code": -101, "message": "账号未登录", "ttl": 1}
+        extra_params = {
+            'access_key': user.dict_user['access_key'],
+            'ts': utils.curr_time(),
+            'room_id': '23058'
+        }
+        params = user.app_sign(extra_params)
+        json_rsp = await user.bililive_session.request_json('GET', url, params=params,
+                                                            headers=user.app.headers)
+        return json_rsp
+
+                
 class SignFansGroupsReq:
     @staticmethod
     async def fetch_groups(user):
         url = "https://api.vc.bilibili.com/link_group/v1/member/my_groups"
         json_rsp = await user.other_session.request_json('GET', url, headers=user.pc.headers)
         return json_rsp
-
+    
     @staticmethod
     async def sign_group(user, group_id, owner_uid):
         extra_params = {
-            'access_key': user.dict_bili["access_key"],
+            'access_key': user.dict_user["access_key"],
             'group_id': group_id,
             'owner_id': owner_uid,
             'ts': utils.curr_time(),
@@ -105,26 +118,26 @@ class SignFansGroupsReq:
         url = f'https://api.vc.bilibili.com/link_setting/v1/link_setting/sign_in'
         json_rsp = await user.other_session.request_json('GET', url, headers=user.app.headers, params=params)
         return json_rsp
-
-
+        
+        
 class SendGiftReq:
     @staticmethod
     async def fetch_gift_config(user):
         url = f'{API_LIVE}/gift/v4/Live/giftConfig'
         json_rsp = await user.bililive_session.request_json('GET', url, ctrl=ZERO_ONLY_CTRL)
         return json_rsp
-
+        
     @staticmethod
     async def fetch_wearing_medal(user):
         url = f'{API_LIVE}/live_user/v1/UserInfo/get_weared_medal'
         data = {
-            'uid': user.dict_bili['uid'],
+            'uid': user.dict_user['uid'],
             'csrf_token': user.dict_user['csrf']
         }
         json_rsp = await user.bililive_session.request_json('POST', url, headers=user.pc.headers, data=data, ctrl=ZERO_ONLY_CTRL)
         return json_rsp
-
-
+    
+    
 class ExchangeSilverCoinReq:
     @staticmethod
     async def silver2coin_web(user):

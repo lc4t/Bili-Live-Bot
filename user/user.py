@@ -2,13 +2,12 @@ import asyncio
 from itertools import count
 from typing import Callable, Optional
 
+import printer
 import conf_loader
 import exceptions
-import printer
-from tasks.login import LoginTask
 from web_session import WebSession
-
-from .platform import AppPlatform, PcPlatform, TvPlatform
+from tasks.login import LoginTask
+from .platform import PcPlatform, AppPlatform, TvPlatform
 
 
 # user.toml 里面的东西全在self.dict_user里面，与 user 一一对应
@@ -19,33 +18,41 @@ class User:
         'id', 'force_sleep', 'name', 'password', 'alias', 'task_ctrl',
         'task_arrangement', 'is_in_jail',
 
-        'tg_bot_token', 'manage_room', 'tg_channel', 'top_live_delay',
-
         'bililive_session', 'login_session', 'other_session',
 
         'dict_user', 'pc', 'app', 'tv', 'repost_del_lock',
         'dyn_lottery_friends',
         '_waiting_login', '_loop',
 
-        'qq_host', 'qq_key', 'qq_num', 'at_all_group'
 
 
+        ### 
+        'tg_bot_token', 'manage_room', 'tg_channel', 'top_live_delay',
+        'qq_host', 'qq_key', 'qq_num', 'at_all_group',
     )
 
     def __init__(
             self, dict_user: dict, task_ctrl: dict, task_arrangement: dict, dict_bili: dict, force_sleep: Callable):
         self.id = next(self._ids)
         self.force_sleep = force_sleep
-        self.name = 'DEFAULT'
-
-        # self.name = dict_user['username']
-        # self.password = dict_user['password']
+        self.name = dict_user['username']
+        self.password = dict_user['password']
         self.alias = dict_user.get('alias', self.name)
-        self.tg_bot_token = dict_user.get('tg_bot_token')
         self.task_ctrl = task_ctrl
         self.task_arrangement = task_arrangement
         self.is_in_jail = False  # 是否小黑屋
+        ###
+        self.tg_bot_token = dict_user.get('tg_bot_token')
+        self.manage_room = dict_user['manage_room']
+        self.tg_channel = dict_user['tg_channel']
+        self.top_live_delay = int(dict_user.get('top_live_delay', 30))
+        self.qq_host = dict_user.get('qq_host', '')
+        self.qq_key = dict_user.get('qq_key', '')
+        self.qq_num = dict_user.get('qq_num', 0)
+        self.at_all_group = dict_user.get('at_all_group', [])
 
+
+        ###
         self.bililive_session = WebSession()
         self.login_session = WebSession()
         self.other_session = WebSession()
@@ -66,44 +73,6 @@ class User:
         dyn_lottery_friends = [(str(uid), name) for uid, name in task_ctrl['dyn_lottery_friends'].items()]
         self.dyn_lottery_friends = dyn_lottery_friends  # list (uid, name)
 
-        self.manage_room = dict_user['manage_room']
-        self.tg_channel = dict_user['tg_channel']
-        self.top_live_delay = int(dict_user.get('top_live_delay', 30))
-        # self.alerts = dict_user.get('alerts', [])
-        # self.gift_comb_delay = dict_user['gift_comb_delay']
-        # self.alert_second = dict_user['alert_second']
-        # self.gift_thx_format = dict_user.get('gift_thx_format', '感谢{username}投喂的{giftname}x{num}')
-        # self.silver_gift_thx_format = dict_user.get('silver_gift_thx_format', self.gift_thx_format)
-        # self.gold_gift_thx_format = dict_user.get('gold_gift_thx_format', self.gift_thx_format)
-        # self.focus_thx_format = dict_user['focus_thx_format']
-        # self.guard_thx_format = dict_user.get('guard_thx_format', self.gift_thx_format)
-        # self.danmu_length = dict_user.get('danmu_length', 30)
-        # self.medal_update_format = dict_user.get('medal_update_format', '')
-        # self.medal_update_check_delay = dict_user.get('medal_update_check_delay', 30)
-        # self.only_live_thx = dict_user.get('only_live_thx', False)
-        # self.reply = dict_user.get('reply', [])
-        # self.ban = dict_user.get('ban', [])
-        # self.height = dict_user.get('height', 0)
-        # self.weight = dict_user.get('weight', 0)
-        self.qq_host = dict_user.get('qq_host', '')
-        self.qq_key = dict_user.get('qq_key', '')
-        self.qq_num = dict_user.get('qq_num', 0)
-        self.at_all_group = dict_user.get('at_all_group', [])
-
-
-
-        # self.fans_check_delay = dict_user.get('fans_check_delay', 20)
-
-        # self.random_list_1 = dict_user.get('random_list_1', [])
-        # self.random_list_2 = dict_user.get('random_list_2', [])
-        # self.random_list_3 = dict_user.get('random_list_3', [])
-        # if len(self.random_list_1) == 0:
-        #     self.random_list_1 = [""]
-        # if len(self.random_list_2) == 0:
-        #     self.random_list_2 = [""]
-        # if len(self.random_list_3) == 0:
-        #     self.random_list_3 = [""]
-
     def update_login_data(self, login_data):
         for key, value in login_data.items():
             self.dict_user[key] = value
@@ -115,9 +84,6 @@ class User:
 
     def is_online(self):
         return self.pc.headers['cookie'] and self.app.headers['cookie'] and self.tv.headers['cookie']
-
-    def update_log(self):
-        conf_loader.write_user({'weight': self.weight, 'height': self.height}, self.id)
 
     def info(
             self,
@@ -168,8 +134,8 @@ class User:
                         self.info('判定出现了登陆失败，已经处理')
                         await self._waiting_login
                 except exceptions.ForbiddenError:
-                    await asyncio.shield(self.force_sleep(0.1))  # bili_sched.force_sleep
-                    await asyncio.sleep(0.1)  # 有的function不受sched控制，主动sleep即可，不cancel原因是怕堵死一些协程
+                    await asyncio.shield(self.force_sleep(3600))  # bili_sched.force_sleep
+                    await asyncio.sleep(3600)  # 有的function不受sched控制，主动sleep即可，不cancel原因是怕堵死一些协程
             else:
                 await self._waiting_login
 

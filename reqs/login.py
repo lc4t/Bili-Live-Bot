@@ -1,5 +1,5 @@
 import base64
-
+    
 import utils
 from json_rsp_ctrl import Ctrl, JsonRspType, In
 
@@ -27,7 +27,7 @@ class LoginReq:
         url = 'https://passport.bilibili.com/login?act=exit'
         json_rsp = await user.login_session.request_json('GET', url, headers=user.pc.headers, ctrl=LOGIN_CTRL)
         return json_rsp
-
+        
     @staticmethod
     async def fetch_key(user):
         url = 'https://passport.bilibili.com/api/oauth2/getKey'
@@ -43,39 +43,26 @@ class LoginReq:
 
     @staticmethod
     async def login(user, url_name, url_password, captcha=''):
+        validate = ''
+        challenge = ''
         extra_params = {
-            'captcha': captcha,
-            'password': url_password,
-            'username': url_name,
-        }
-        params = user.app_sign(extra_params)
-        url = "https://passport.bilibili.com/api/v3/oauth2/login"
-
-        # str with preferably url-encoded content (Warning: content will not be encoded by aiohttp)
-        # password 可能有特殊字符
-        params = "&".join(f'{key}={value}' for key, value in params.items())
-
-        json_rsp = await user.login_session.request_json('POST', url, headers=user.app.headers, params=params, ctrl=LOGIN_CTRL)
-        return json_rsp
-
-    @staticmethod
-    async def login_with_captcha(user, url_name, url_password, challenge, validate):
-        extra_params = {
+            'seccode': f'{validate}|jordan' if validate else '',
+            'validate': validate,
             'challenge': challenge,
-            'password': url_password,
-            "seccode": validate + '%7Cjordan',
             'username': url_name,
-            "validate": validate
+            'password': url_password,
+            'ts': utils.curr_time(),
         }
         params = user.app_sign(extra_params)
-        url = "https://passport.bilibili.com/api/v3/oauth2/login"
 
-        # str with preferably url-encoded content (Warning: content will not be encoded by aiohttp)
-        # password 可能有特殊字符
-        params = "&".join(f'{key}={value}' for key, value in params.items())
-
-        json_rsp = await user.login_session.request_json('POST', url, headers=user.app.headers, params=params,
-                                                         ctrl=LOGIN_CTRL)
+        # url_password 存在一些 % 这些，b站要求作为 string 不编码为 "%25"
+        # aiohttp doc 符合，但是
+        # https://github.com/aio-libs/aiohttp/blob/10c8ce9567d008d4f92a99ffe45f8d0878e99275/aiohttp/client_reqrep.py#L215-L219
+        # yarl 兼容问题
+        # 故手动处理
+        params_str = utils.prepare_params(params)
+        url_aiohttp = f'https://passport.bilibili.com/x/passport-login/oauth2/login?{params_str}'
+        json_rsp = await user.login_session.request_json('POST', url_aiohttp, headers=user.app.headers, params=None, ctrl=LOGIN_CTRL)
         return json_rsp
 
     @staticmethod
@@ -92,8 +79,10 @@ class LoginReq:
             ** dict_cookie
         }
         params = user.app_sign(extra_params)
-        true_url = f'https://passport.bilibili.com/api/v3/oauth2/info'
-        json_rsp = await user.login_session.request_json('GET', true_url, params=params, headers=user.app.headers, ctrl=LOGIN_CTRL)
+        # 这里没办法，cookie 里面有特殊字符，与 yarl 兼容无关
+        params_str = utils.prepare_params(params)
+        true_url = f'https://passport.bilibili.com/api/v3/oauth2/info?{params_str}'
+        json_rsp = await user.login_session.request_json('GET', true_url, params=None, headers=user.app.headers, ctrl=LOGIN_CTRL)
         return json_rsp
 
     @staticmethod
@@ -111,11 +100,13 @@ class LoginReq:
             ** dict_cookie
         }
         params = user.app_sign(extra_params)
-        url = f'https://passport.bilibili.com/api/v2/oauth2/refresh_token'
-        json_rsp = await user.login_session.request_json('POST', url, headers=user.app.headers, params=params, ctrl=LOGIN_CTRL)
+        # 这里没办法，cookie 里面有特殊字符，与 yarl 兼容无关
+        params_str = utils.prepare_params(params)
+        url = f'https://passport.bilibili.com/api/v2/oauth2/refresh_token?{params_str}'
+        json_rsp = await user.login_session.request_json('POST', url, headers=user.app.headers, params=None, ctrl=LOGIN_CTRL)
         print('json_rsp', json_rsp)
         return json_rsp
-
+        
     @staticmethod
     async def cnn_captcha(user, content):
         url = "http://152.32.186.69:19951/captcha/v1"
@@ -124,13 +115,3 @@ class LoginReq:
         captcha = json_rsp['message']
         print(f"此次登录出现验证码,识别结果为{captcha}")
         return captcha
-
-    @staticmethod
-    async def gt_solve(user, gt_params):
-        url = 'http://47.91.167.21:2333/api'
-        data = {
-            "gt": gt_params["gt"],
-            "challenge": gt_params["challenge"],
-        }
-        json_rsp = await user.other_session.orig_req_json('POST', url, data=data)
-        return json_rsp
