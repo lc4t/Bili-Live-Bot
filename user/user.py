@@ -1,6 +1,4 @@
-import copy
 import asyncio
-import hashlib
 from itertools import count
 from typing import Callable, Optional
 
@@ -9,21 +7,26 @@ import conf_loader
 import exceptions
 from web_session import WebSession
 from tasks.login import LoginTask
+from .platform import PcPlatform, AppPlatform, TvPlatform
 
 
+# user.toml 里面的东西全在self.dict_user里面，与 user 一一对应
+# bili.toml 东西在 self.pc、self.app、self.tv 里面，因为这一串东西太复杂了，不方便在直接写在 User 里面了
 class User:
     _ids = count(0)
     __slots__ = (
-        'id', 'force_sleep', 'name', 'password', 'manage_room', 'alerts', 'gift_comb_delay', 'alert_second', 'gift_thx_format', 'focus_thx_format', 'alias', 'task_ctrl',
-        'danmu_length', 'random_list_1', 'random_list_2', 'random_list_3',
+        'id', 'force_sleep', 'name', 'password', 'alias', 'task_ctrl',
         'task_arrangement', 'is_in_jail',
-        'pk_max_votes', 'pk_gift_id', 'pk_gift_rank',
 
         'bililive_session', 'login_session', 'other_session',
 
-        'dict_bili', 'app_params', 'repost_del_lock',
-        'dyn_lottery_friends', 'storm_lock',
-        '_waiting_login', '_loop'
+        'dict_user', 'pc', 'app', 'tv', 'repost_del_lock',
+        'dyn_lottery_friends',
+        '_waiting_login', '_loop',
+
+        ### 
+        'pk_max_votes', 'pk_gift_id', 'pk_gift_rank',
+        'manage_room',
     )
 
     def __init__(
@@ -33,65 +36,46 @@ class User:
         self.name = dict_user['username']
         self.password = dict_user['password']
         self.alias = dict_user.get('alias', self.name)
-        self.manage_room = dict_user['manage_room']
-        self.alerts = dict_user['alerts']
-        self.gift_comb_delay = dict_user['gift_comb_delay']
-        self.alert_second = dict_user['alert_second']
-        self.gift_thx_format = dict_user['gift_thx_format']
-        self.focus_thx_format = dict_user['focus_thx_format']
-        self.danmu_length = dict_user.get('danmu_length', 30)
-        self.pk_max_votes = dict_user.get('pk_max_votes', 0)
-        self.pk_gift_id = dict_user['pk_gift_id']
-        self.pk_gift_rank = dict_user['pk_gift_rank']
-        self.random_list_1 = dict_user.get('random_list_1', [])
-        self.random_list_2 = dict_user.get('random_list_2', [])
-        self.random_list_3 = dict_user.get('random_list_3', [])
-        if len(self.random_list_1) == 0:
-            self.random_list_1 = [""]
-        if len(self.random_list_2) == 0:
-            self.random_list_2 = [""]
-        if len(self.random_list_3) == 0:
-            self.random_list_3 = [""]
-
         self.task_ctrl = task_ctrl
         self.task_arrangement = task_arrangement
         self.is_in_jail = False  # 是否小黑屋
-
+        ##
+        self.manage_room = dict_user['manage_room']
+        self.pk_max_votes = dict_user.get('pk_max_votes', 0)
+        self.pk_gift_id = dict_user['pk_gift_id']
+        self.pk_gift_rank = dict_user['pk_gift_rank']
+        ##
         self.bililive_session = WebSession()
         self.login_session = WebSession()
         self.other_session = WebSession()
 
         # 每个user里面都分享了同一个dict，必须要隔离，否则更新cookie这些的时候会互相覆盖
-        self.dict_bili = copy.deepcopy(dict_bili)
-        self.app_params = {
-            'actionKey': dict_bili['actionKey'],
-            'appkey': dict_bili['appkey'],
-            'build': dict_bili['build'],
-            'device': dict_bili['device'],
-            'mobi_app': dict_bili['mobi_app'],
-            'platform': dict_bili['platform'],
-        }
+        self.pc = PcPlatform(dict_bili['pc_headers'].copy())
+        self.app = AppPlatform(dict_bili['app_headers'].copy(), dict_bili['app_params'])
+        self.tv = TvPlatform(dict_bili['tv_headers'].copy(), dict_bili['tv_params'])
+
+        self.dict_user = dict_user
+
         self.update_login_data(dict_user)
 
         self._waiting_login = None
         self._loop = asyncio.get_event_loop()
 
         self.repost_del_lock = asyncio.Lock()  # 在follow与unfollow过程中必须保证安全(repost和del整个过程加锁)
-        dyn_lottery_friends = [(str(uid), name)
-                               for uid, name in task_ctrl['dyn_lottery_friends'].items()]
+        dyn_lottery_friends = [(str(uid), name) for uid, name in task_ctrl['dyn_lottery_friends'].items()]
         self.dyn_lottery_friends = dyn_lottery_friends  # list (uid, name)
-        self.storm_lock = asyncio.Semaphore(1)  # 用于控制同时进行的风暴数目(注意是单个用户的)
 
     def update_login_data(self, login_data):
-        for i, value in login_data.items():
-            self.dict_bili[i] = value
-            if i == 'cookie':
-                self.dict_bili['pcheaders']['cookie'] = value
-                self.dict_bili['appheaders']['cookie'] = value
+        for key, value in login_data.items():
+            self.dict_user[key] = value
+            if key == 'cookie':
+                self.pc.update_cookie(value)
+                self.app.update_cookie(value)
+                self.tv.update_cookie(value)
         conf_loader.write_user(login_data, self.id)
 
     def is_online(self):
-        return self.dict_bili['pcheaders']['cookie'] and self.dict_bili['appheaders']['cookie']
+        return self.pc.headers['cookie'] and self.app.headers['cookie'] and self.tv.headers['cookie']
 
     def info(
             self,
@@ -112,19 +96,11 @@ class User:
             **kwargs,
             extra_info=f'用户id:{self.id} 名字:{self.alias}')
 
-    def sort_and_sign(self, extra_params: Optional[dict] = None) -> dict:
-        if extra_params is None:
-            dict_params = self.app_params.copy()
-        else:
-            dict_params = {**self.app_params, **extra_params}
+    def app_sign(self, extra_params: Optional[dict] = None) -> dict:
+        return self.app.sign(extra_params)
 
-        list_params = [f'{key}={value}' for key, value in dict_params.items()]
-        list_params.sort()
-        text = "&".join(list_params)
-        text_with_appsecret = f'{text}{self.dict_bili["app_secret"]}'
-        sign = hashlib.md5(text_with_appsecret.encode('utf-8')).hexdigest()
-        dict_params['sign'] = sign
-        return dict_params
+    def tv_sign(self, extra_params: Optional[dict] = None) -> dict:
+        return self.tv.sign(extra_params)
 
     async def req_s(self, func, *args, timeout=None):
         while True:

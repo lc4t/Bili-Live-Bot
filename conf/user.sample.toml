@@ -17,8 +17,16 @@ alert_second = 300
 gift_comb_delay = 5
 # 送礼感谢格式
 gift_thx_format = "感谢{username}投喂的{giftname}x{num}"
+sliver_gift_thx_format = "感谢{username}投喂的{giftname}x{num}"
+gold_gift_thx_format = "感谢{username}投喂的{giftname}x{num}!"
 # 关注感谢格式
 focus_thx_format = "谢谢{username}的关注"
+# 上船感谢
+guard_thx_format = "感谢{username}投喂的{giftname}x{num}"
+# 是否仅开播时答谢
+only_live_thx = false
+# 新关注判定延迟
+fans_check_delay = 30
 
 pk_max_votes = 2000
 pk_gift_id = 20014 # 比心
@@ -33,3 +41,17 @@ pk_gift_rank = 52 # 比心是52分
 random_list_1 = []
 random_list_2 = []
 random_list_3 = []
+
+height = 0
+weight = 0
+# 关键词回复
+[[users.reply]]
+  key = "^.*(好听).*$"
+  percent = 1
+  reply = "好听赶紧关注啊！"
+
+# 关键词禁言
+[[users.ban]]
+  key = "^(好菜)$"
+  percent = 1
+  hour = 720
