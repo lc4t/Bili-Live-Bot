@@ -388,7 +388,8 @@ class DanmuGiftThx(bili_danmu.WsDanmuClient):
                          'USER_TOAST_MSG', 'SYS_MSG', 'COMBO_SEND', 'ROOM_BOX_USER',
                          'TV_START', 'TV_END', 'ANCHOR_LOT_END', 'ANCHOR_LOT_AWARD',
                          'ANCHOR_LOT_CHECKSTATUS', 'ANCHOR_LOT_STAR', 'ROOM_CHANGE',
-                         'new_anchor_reward', 'room_admin_entrance', 'ROOM_ADMINS', 'ANCHOR_LOT_START']:
+                         'new_anchor_reward', 'room_admin_entrance', 'ROOM_ADMINS', 'ANCHOR_LOT_START', 'INTERACT_WORD', 'ONLINE_RANK_V2', 'WIDGET_BANNER',
+                         'ONLINE_RANK_COUNT', ]:
                 pass
             elif cmd in ['LIVE']:
                 print(f'开播 {self._room_id}')
