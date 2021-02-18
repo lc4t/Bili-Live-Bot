@@ -12,9 +12,13 @@ from printer import info as print
 from danmu.bili_abc import bili_danmu
 from reqs.utils import UtilsReq
 from reqs.custom import BanUserReq
+from .bili_abc.bili_danmu import WsDanmuClient
 
 
-class DanmuGiftThx(bili_danmu.WsDanmuClient):
+DELAY = 0
+
+
+class DanmuGiftThx(WsDanmuClient):
 
     # GIFT_MSG = '谢谢可爱的{username}投喂{giftname}x{num} (╭￣3￣)╭♡'
     # DELAY_SECOND = 3
@@ -22,7 +26,11 @@ class DanmuGiftThx(bili_danmu.WsDanmuClient):
     async def set_user(self, user):
         self.user = user
         self.GIFT_QUEUE = queue.Queue()
-        self.is_live = False
+        self.pk_end_time = -1
+        self.end = True
+        self.pk_me_votes = 0
+        self.pk_op_votes = 0
+        self.pk_now_use = 0
         print(f'已关联用户{self.user.alias} -> {self._room_id}')
         await self._is_alive()
 
@@ -32,7 +40,7 @@ class DanmuGiftThx(bili_danmu.WsDanmuClient):
         self.is_live = status == 1
         return self.is_live
 
-    async def run_alter(self):
+    async def run_alert(self):
         if len(self.user.alerts) == 0:
             print('感谢🐔公告循环内容为空')
             return
@@ -137,116 +145,105 @@ class DanmuGiftThx(bili_danmu.WsDanmuClient):
             await asyncio.sleep(self.user.fans_check_delay)
 
     async def run_sender(self):
+        print('---------------------')
         roomid = self._room_id
         wait_to_send_danmu = {}     # 礼物列表合并后的输出
         sem = asyncio.Semaphore(1)
-        while(1):
-            # 取出所有结果，添加到等待队列
-            # 如果某个room-user-gift保持了5s不动，则推出
-            async with sem:
-                qlength = self.GIFT_QUEUE.qsize()
-                cache_gift = []
-                for i in range(qlength):
-                    cache_gift.append(self.GIFT_QUEUE.get())
-            # print(cache_gift)
-            # cache_gift是所有没处理的送礼物的信息
-            # 现在将他们合并为一个list
-            for gift_info in cache_gift:
-                if gift_info.get('room') != roomid:
-                    print('error room id')
-                    exit(0)
-                # 拿到单条礼物信息
-                username, gift_name, gift_num, t, coin_type, total_coin = gift_info.get('username'), gift_info.get(
-                    'gift_name'), gift_info.get('gift_num'), gift_info.get('t'),  gift_info.get('coin_type'), gift_info.get('total_coin')
-                # 以用户名为主键
-                if username not in wait_to_send_danmu:
-                    wait_to_send_danmu[username] = {}    # 新建username
-                # 礼物名为主键
-                if f'{gift_name}_{coin_type}' not in wait_to_send_danmu.get(username):
-                    wait_to_send_danmu[username].update(
-                        {f'{gift_name}_{coin_type}': {
-                            'gift_num': gift_num,
-                            'coin_type': coin_type,
-                            'total_coin': total_coin,
-                            't': t,
-                        }})   # username->gift_name
-                else:
-                    # 查找已经送了的有多少
-                    already_num = wait_to_send_danmu[username].get(
-                        f'{gift_name}_{coin_type}', {}).get('gift_num', 0)  # 已经送了的
-                    already_total_coin = wait_to_send_danmu[username].get(
-                        f'{gift_name}_{coin_type}', {}).get('total_coin', 0)  # 已经送了的总价值
-
-                    wait_to_send_danmu[username][f'{gift_name}_{coin_type}'].update(
-                        {
-                            'gift_num': gift_num + already_num,
-                            't': t,
-                            'total_coin': total_coin+already_total_coin
-                        })  # 更新数量
-
-            # print(wait_to_send_danmu)
-
-            # 检查时间是否达到推出标准
-            # 这里可以重写感谢弹幕
-
-            for username, gifts in wait_to_send_danmu.items():
-                for gift_name, info in gifts.items():
-                    gift_num = info.get('gift_num')
-                    coin_type = info.get('coin_type')
-                    total_coin = info.get('total_coin', 0)
-                    gift_name_true = gift_name.strip(f'_{coin_type}')
-                    fstr = ''
-                    if coin_type == 'silver':
-                        fstr = self.user.silver_gift_thx_format
+        print('-----run_sender')
+        try:
+            while(1):
+                # 取出所有结果，添加到等待队列
+                # 如果某个room-user-gift保持了5s不动，则推出
+                async with sem:
+                    qlength = self.GIFT_QUEUE.qsize()
+                    cache_gift = []
+                    for i in range(qlength):
+                        cache_gift.append(self.GIFT_QUEUE.get())
+                # print(cache_gift)
+                # cache_gift是所有没处理的送礼物的信息
+                # 现在将他们合并为一个list
+                for gift_info in cache_gift:
+                    if gift_info.get('room') != roomid:
+                        print('error room id')
+                        exit(0)
+                    # 拿到单条礼物信息
+                    username, gift_name, gift_num, t, coin_type, total_coin = gift_info.get('username'), gift_info.get(
+                        'gift_name'), gift_info.get('gift_num'), gift_info.get('t'),  gift_info.get('coin_type'), gift_info.get('total_coin')
+                    # 以用户名为主键
+                    if username not in wait_to_send_danmu:
+                        wait_to_send_danmu[username] = {}    # 新建username
+                    # 礼物名为主键
+                    if f'{gift_name}_{coin_type}' not in wait_to_send_danmu.get(username):
+                        wait_to_send_danmu[username].update(
+                            {f'{gift_name}_{coin_type}': {
+                                'gift_num': gift_num,
+                                'coin_type': coin_type,
+                                'total_coin': total_coin,
+                                't': t,
+                            }})   # username->gift_name
                     else:
-                        fstr = self.user.gold_gift_thx_format
-                    if gift_num == 0:
-                        continue
-                    if time.time() - info.get('t') > self.user.gift_comb_delay:
-                        if self.is_live or (not self.user.only_live_thx):
+                        # 查找已经送了的有多少
+                        already_num = wait_to_send_danmu[username].get(
+                            f'{gift_name}_{coin_type}', {}).get('gift_num', 0)  # 已经送了的
+                        already_total_coin = wait_to_send_danmu[username].get(
+                            f'{gift_name}_{coin_type}', {}).get('total_coin', 0)  # 已经送了的总价值
 
-                            # self.user.gift_thx_silver_format
-                            await self.send_danmu(fstr.format(username=username,
-                                                              num=gift_num,
-                                                              total_coin=total_coin,
-                                                              giftname=gift_name_true,
-                                                              random1=random.choice(
-                                                                  self.user.random_list_1),
-                                                              random2=random.choice(
-                                                                  self.user.random_list_2),
-                                                              random3=random.choice(self.user.random_list_3)))
-                            await self.game_log(coin_type, total_coin)
-                        wait_to_send_danmu[username][gift_name].update(
-                            {'gift_num': 0, 'total_coin': 0})
+                        wait_to_send_danmu[username][f'{gift_name}_{coin_type}'].update(
+                            {
+                                'gift_num': gift_num + already_num,
+                                't': t,
+                                'total_coin': total_coin+already_total_coin
+                            })  # 更新数量
 
-            await asyncio.sleep(1)
+                # print(wait_to_send_danmu)
 
-    def replace_num(self, text):
-        d = {
-            '0': '零',
-            '1': '一',
-            '2': '二',
-            '3': '三',
-            '4': '四',
-            '5': '五',
-            '6': '六',
-            '7': '七',
-            '8': '八',
-            '9': '九',
-        }
-        rp = random.sample(list(d.keys()), 5)
-        for o in rp:
-            text = text.replace(o, d[o])
-        return text
+                # 检查时间是否达到推出标准
+                # 这里可以重写感谢弹幕
 
-    async def send_danmu(self, text, default_length=30, retry=10):
-        if retry <= 0:
-            print(text, '-->failed')
-            return
+                for username, gifts in wait_to_send_danmu.items():
+                    for gift_name, info in gifts.items():
+                        gift_num = info.get('gift_num')
+                        coin_type = info.get('coin_type')
+                        total_coin = info.get('total_coin', 0)
+                        gift_name_true = gift_name.strip(f'_{coin_type}')
+                        fstr = ''
+                        if self.user.const_json.get('normal_gift_thx_format') and gift_name_true in self.user.const_json.get('normal_gift_thx_format'):
+                            fstr = self.user.const_json.get('normal_gift_thx_format').get(gift_name_true)
+                        else:
+                            if coin_type == 'silver':
+                                fstr = self.user.silver_gift_thx_format
+                            else:
+                                fstr = self.user.gold_gift_thx_format
+                        # print(fstr)
+                        if gift_num == 0:
+                            continue
+                        if time.time() - info.get('t') > self.user.gift_comb_delay:
+                            if self.is_live or (not self.user.only_live_thx):
+
+                                # self.user.gift_thx_silver_format
+                                await self.send_danmu(fstr.format(username=username,
+                                                                num=gift_num,
+                                                                total_coin=total_coin,
+                                                                giftname=gift_name_true,
+                                                                random1=random.choice(
+                                                                    self.user.random_list_1),
+                                                                random2=random.choice(
+                                                                    self.user.random_list_2),
+                                                                random3=random.choice(self.user.random_list_3)))
+                                await self.game_log(coin_type, total_coin)
+                            wait_to_send_danmu[username][gift_name].update(
+                                {'gift_num': 0, 'total_coin': 0})
+
+                await asyncio.sleep(0.1)
+        except:
+            traceback.print_exc()
+
+    async def send_danmu(self, text, default_length=30):
+        print('try:', text, len(text))
         default_length = self.user.danmu_length
         msg = text[0:default_length]
         json_rsp = await self.user.req_s(UtilsReq.send_danmu, self.user, msg, self._room_id)
-        # print(json_rsp)
+        print(json_rsp)
         if json_rsp.get('msg', '') == 'msg in 1s':
             await asyncio.sleep(0.5)
             return await self.send_danmu(text, default_length, retry)
@@ -333,24 +330,17 @@ class DanmuGiftThx(bili_danmu.WsDanmuClient):
 
     async def handle_danmu(self, data: dict):
         cmd = data['cmd']
-
         # print(data)
         try:
             # self.user.height += 1
             # self.user.update_log()
             if cmd == 'DANMU_MSG':
                 flag = data['info'][0][9]
-                if flag == 0:
-                    danmu = data['info'][1]
-                    d = f"{data['info'][2][1]}({data['info'][2][0]})在{self._room_id}: {danmu}"
-                    print(d)
-                    open('danmu.txt', 'a').write(d+'\n')
-
-                    # 匹配danmu条件
-                    await self.auto_reply(data['info'][2][1], int(data['info'][2][0]), danmu)
-                    await self.auto_ban(data['info'][2][1], int(data['info'][2][0]), danmu)
-
+                # if flag == 0:
+                #     print(
+                #         f"{data['info'][2][1]}({data['info'][2][0]})在{self._room_id}: {data['info'][1]}")
             elif cmd == 'SEND_GIFT':
+                # print(data)
                 room_id = self._room_id
                 user_id = data['data']['uid']
                 username = data['data']['uname']
@@ -368,7 +358,6 @@ class DanmuGiftThx(bili_danmu.WsDanmuClient):
                     't': time.time(),
                     'coin_type': coin_type,
                     'total_coin': total_coin,
-
                 })
 
             elif cmd == 'GUARD_BUY':
@@ -377,27 +366,41 @@ class DanmuGiftThx(bili_danmu.WsDanmuClient):
                 gift_name = data['data']['gift_name']
                 gift_num = data['data']['num']
                 if self.is_live or (not self.user.only_live_thx):
-                    await self.send_danmu(self.user.guard_thx_format.format(username=username, num=gift_num, giftname=gift_name))
+                    fstr = self.user.guard_thx_format
+                    if self.user.const_json.get('normal_gift_thx_format') and gift_name in self.user.const_json.get('normal_gift_thx_format'):
+                        fstr = self.user.const_json.get('normal_gift_thx_format').get(gift_name)
+                    await self.send_danmu(fstr.format(username=username, num=gift_num, giftname=gift_name))
 
-            elif cmd in ['WELCOME_GUARD', 'WELCOME', 'NOTICE_MSG', 'SYS_GIFT',
-                         'ACTIVITY_BANNER_UPDATE_BLS', 'ENTRY_EFFECT', 'ROOM_RANK',
-                         'ACTIVITY_BANNER_UPDATE_V2', 'COMBO_END', 'ROOM_REAL_TIME_MESSAGE_UPDATE',
-                         'ROOM_BLOCK_MSG', 'WISH_BOTTLE', 'WEEK_STAR_CLOCK', 'ROOM_BOX_MASTER',
-                         'HOUR_RANK_AWARDS', 'ROOM_SKIN_MSG', 'RAFFLE_START', 'RAFFLE_END',
-                         'GUARD_LOTTERY_START', 'GUARD_LOTTERY_END', 'GUARD_MSG',
-                         'USER_TOAST_MSG', 'SYS_MSG', 'COMBO_SEND', 'ROOM_BOX_USER',
-                         'TV_START', 'TV_END', 'ANCHOR_LOT_END', 'ANCHOR_LOT_AWARD',
-                         'ANCHOR_LOT_CHECKSTATUS', 'ANCHOR_LOT_STAR', 'ROOM_CHANGE',
-                         'new_anchor_reward', 'room_admin_entrance', 'ROOM_ADMINS', 'ANCHOR_LOT_START', 'INTERACT_WORD', 'ONLINE_RANK_V2', 'WIDGET_BANNER',
-                         'ONLINE_RANK_COUNT', ]:
+            elif cmd == 'PK_BATTLE_START':
                 pass
-            elif cmd in ['LIVE']:
-                print(f'开播 {self._room_id}')
-                self.is_live = True
-            elif cmd in ['PREPARING']:
-                print(f'下播 {self._room_id}')
-                self.is_live = False
-            elif cmd.startswith('PK_'):
+
+            elif cmd == 'PK_BATTLE_PROCESS':
+                pass
+
+            elif cmd == 'PK_BATTLE_END':
+                pass
+            elif cmd in ['PK_BATTLE_SETTLE_USER', 'PK_BATTLE_SETTLE']:
+                pass
+            elif cmd == 'PK_BATTLE_PRO_TYPE':
+                pass
+            elif cmd.startswith('ANCHOR'):
+                print(data)
+            elif cmd in [
+                'ONLINE_RANK_V2', 'ONLINE_RANK_COUNT',
+                'NOTICE_MSG', 
+                'WELCOME_GUARD', 
+                'WELCOME', 
+                'NOTICE_MSG', 
+                'SYS_GIFT', 
+                'ACTIVITY_BANNER_UPDATE_BLS', 
+                'ENTRY_EFFECT', 'ROOM_RANK', 
+                'ACTIVITY_BANNER_UPDATE_V2', 'COMBO_END', 'ROOM_REAL_TIME_MESSAGE_UPDATE', 
+                'ROOM_BLOCK_MSG', 'WISH_BOTTLE', 'WEEK_STAR_CLOCK', 'ROOM_BOX_MASTER', 
+                'HOUR_RANK_AWARDS', 'ROOM_SKIN_MSG', 'RAFFLE_START', 'RAFFLE_END', 'GUARD_LOTTERY_START', 
+                'GUARD_LOTTERY_END', 'GUARD_MSG', 'USER_TOAST_MSG', 'SYS_MSG', 'COMBO_SEND', 'ROOM_BOX_USER', 
+                'TV_START', 'TV_END', 'ANCHOR_LOT_END', 'ANCHOR_LOT_AWARD', 'ANCHOR_LOT_CHECKSTATUS', 
+                'ANCHOR_LOT_STAR', 'ROOM_CHANGE', 'LIVE', 'new_anchor_reward', 'room_admin_entrance', 
+                'ROOM_ADMINS', 'PREPARING', 'INTERACT_WORD', 'WIDGET_BANNER', '']:
                 pass
             else:
                 print(data)

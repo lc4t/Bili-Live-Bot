@@ -3,6 +3,7 @@ from itertools import count
 from typing import Callable, Optional
 
 import printer
+import json
 import conf_loader
 import exceptions
 from web_session import WebSession
@@ -32,6 +33,7 @@ class User:
         'silver_gift_thx_format', 'gold_gift_thx_format',
         'reply', 'ban',
         'height', 'weight',
+        'const_json',
     )
 
     def __init__(
@@ -62,6 +64,12 @@ class User:
         self.ban = dict_user.get('ban', [])
         self.height = dict_user.get('height', 0)
         self.weight = dict_user.get('weight', 0)
+
+        if dict_user.get('const_json'):
+            self.const_json = json.load(open(dict_user.get('const_json'), 'r'))
+        else:
+            self.const_json = {}
+
 
         self.fans_check_delay = dict_user.get('fans_check_delay', 20)
         
@@ -107,6 +115,9 @@ class User:
 
     def is_online(self):
         return self.pc.headers['cookie'] and self.app.headers['cookie'] and self.tv.headers['cookie']
+
+    def update_log(self):
+        conf_loader.write_user({'weight': self.weight, 'height': self.height}, self.id)
 
     def info(
             self,
