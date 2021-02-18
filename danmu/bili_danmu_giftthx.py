@@ -37,7 +37,7 @@ class DanmuGiftThx(WsDanmuClient):
     async def _is_alive(self):
         json_rsp = await self.user.req_s(UtilsReq.init_room, self.user, self._room_id)
         status = json_rsp.get('data', {}).get('live_status')
-        self.is_live = status == 1
+        self.is_live = status
         return self.is_live
 
     async def run_alert(self):
@@ -145,11 +145,11 @@ class DanmuGiftThx(WsDanmuClient):
             await asyncio.sleep(self.user.fans_check_delay)
 
     async def run_sender(self):
-        print('---------------------')
+        # print('---------------------')
         roomid = self._room_id
         wait_to_send_danmu = {}     # 礼物列表合并后的输出
         sem = asyncio.Semaphore(1)
-        print('-----run_sender')
+        # print('-----run_sender')
         try:
             while(1):
                 # 取出所有结果，添加到等待队列
@@ -257,11 +257,12 @@ class DanmuGiftThx(WsDanmuClient):
             return await self.send_danmu(text, default_length, retry)
         elif json_rsp.get('msg', '') == '':
             pass
-        elif json_rsp.get('msg', '') == '内容非法':
-            print(f'{text} --> {retry}')
+        elif json_rsp.get('msg', '') in ['内容非法', 'f']:
+            print(f'{text} --> 非法')
             print(json_rsp)
-            text = self.replace_num(text)
-            return await self.send_danmu(text, default_length, retry-1)
+            return 
+            # text = self.replace_num(text)
+            # return await self.send_danmu(text, default_length, retry-1)
         elif json_rsp.get('msg', '') == 'msg repeat':
             return
             # await asyncio.sleep(0.5)
@@ -382,10 +383,8 @@ class DanmuGiftThx(WsDanmuClient):
 
             elif cmd == 'PK_BATTLE_START':
                 pass
-
             elif cmd == 'PK_BATTLE_PROCESS':
                 pass
-
             elif cmd == 'PK_BATTLE_END':
                 pass
             elif cmd in ['PK_BATTLE_SETTLE_USER', 'PK_BATTLE_SETTLE']:
@@ -394,6 +393,12 @@ class DanmuGiftThx(WsDanmuClient):
                 pass
             elif cmd.startswith('ANCHOR'):
                 print(data)
+            elif cmd in ['LIVE']:
+                print(f'开播 {self._room_id}')
+                self.is_live = True
+            elif cmd in ['PREPARING']:
+                print(f'下播 {self._room_id}')
+                self.is_live = False
             elif cmd in [
                 'ONLINE_RANK_V2', 'ONLINE_RANK_COUNT',
                 'NOTICE_MSG', 

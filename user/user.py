@@ -33,7 +33,7 @@ class User:
         'silver_gift_thx_format', 'gold_gift_thx_format',
         'reply', 'ban',
         'height', 'weight',
-        'const_json',
+        'const_json', 'only_live_alert',
     )
 
     def __init__(
@@ -60,6 +60,7 @@ class User:
         self.medal_update_format = dict_user.get('medal_update_format', '')
         self.medal_update_check_delay = dict_user.get('medal_update_check_delay', 30)
         self.only_live_thx = dict_user.get('only_live_thx', False)
+        self.only_live_alert = dict_user.get('only_live_alert', True)
         self.reply = dict_user.get('reply', [])
         self.ban = dict_user.get('ban', [])
         self.height = dict_user.get('height', 0)
