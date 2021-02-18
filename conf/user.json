@@ -15,15 +15,12 @@
         "这个好诶": "感谢{username}赠送的这个好诶x{num}，好诶~~",
         "吃瓜": "感谢{username}赠送的凉了x{num}，┭┮﹏┭┮",
         "凉了": "感谢{username}赠送的吃瓜x{num}，嗑瓜子看戏ing",
-        "B坷垃": "感谢{username}赠送的B坷垃x{num}，酥酥又长了1cm",
+        "B坷垃_gold": "感谢{username}赠送的B坷垃x{num}，酥酥又长了1cm",
         "冰阔落": "感谢{username}赠送的冰阔落x{num}，还想喝！",
-        "flag": "感谢{username}赠送的flagx{num}，翻车是不可能的！",
-        // "fla": "感谢{username}赠送的flagx{num}，翻车是不可能的！",
+        "flag_gold": "感谢{username}赠送的flagx{num}，翻车是不可能的！",
         "礼花": "感谢{username}赠送的礼花x{num}，嘤嘤嘤好吵好吵~",
         "摩天大楼": "感谢{username}的摩天大楼x{num}！本弹幕姬啵啵你！",
         "小电视飞船": "{username}的小电视让本直播间蓬荜生辉！！老板大气！"
-
-
 
     }
 }

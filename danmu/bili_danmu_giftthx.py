@@ -205,11 +205,13 @@ class DanmuGiftThx(WsDanmuClient):
                         gift_num = info.get('gift_num')
                         coin_type = info.get('coin_type')
                         total_coin = info.get('total_coin', 0)
-                        gift_name_true = gift_name
-                        # gift_name_true = gift_name.strip(f'_{coin_type}')
+                        # flag_gold
+                        # print(gift_name)
+                        gift_name_true = gift_name.replace('_gold', '').replace('_silver', '')
+
                         fstr = ''
-                        if self.user.const_json.get('normal_gift_thx_format') and gift_name_true in self.user.const_json.get('normal_gift_thx_format'):
-                            fstr = self.user.const_json.get('normal_gift_thx_format').get(gift_name_true)
+                        if self.user.const_json.get('normal_gift_thx_format') and gift_name in self.user.const_json.get('normal_gift_thx_format'):
+                            fstr = self.user.const_json.get('normal_gift_thx_format').get(gift_name)
                         else:
                             if coin_type == 'silver':
                                 fstr = self.user.silver_gift_thx_format
@@ -239,7 +241,9 @@ class DanmuGiftThx(WsDanmuClient):
         except:
             traceback.print_exc()
 
-    async def send_danmu(self, text, default_length=30):
+    async def send_danmu(self, text, default_length=30, retry=5):
+        if retry < 0:
+            return
         print('try:', text, len(text))
         default_length = self.user.danmu_length
         msg = text[0:default_length]
@@ -256,8 +260,9 @@ class DanmuGiftThx(WsDanmuClient):
             text = self.replace_num(text)
             return await self.send_danmu(text, default_length, retry-1)
         elif json_rsp.get('msg', '') == 'msg repeat':
-            await asyncio.sleep(0.5)
-            return await self.send_danmu(text, default_length, retry-3)
+            return
+            # await asyncio.sleep(0.5)
+            # return await self.send_danmu(text, default_length, retry-3)
         elif json_rsp.get('msg', '') == '超出限制长度':
             print(text)
             print(json_rsp)
