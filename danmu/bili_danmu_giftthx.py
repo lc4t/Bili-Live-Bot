@@ -214,12 +214,12 @@ class DanmuGiftThx(WsDanmuClient):
                             fstr = self.user.const_json.get('normal_gift_thx_format').get(gift_name)
                         elif self.user.const_json.get('normal_gift_thx_format') and gift_name_true in self.user.const_json.get('normal_gift_thx_format'):
                             fstr = self.user.const_json.get('normal_gift_thx_format').get(gift_name_true)
-                        else:
+                        elif coin_type == 'silver':
                             print(gift_name)
-                            if coin_type == 'silver':
-                                fstr = self.user.silver_gift_thx_format
-                            else:
-                                fstr = self.user.gold_gift_thx_format
+                            fstr = self.user.silver_gift_thx_format
+                        else:
+                            fstr = self.user.gold_gift_thx_format
+                            print(gift_name)
                         # print(fstr)
                         if gift_num == 0:
                             continue
