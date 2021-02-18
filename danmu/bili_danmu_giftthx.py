@@ -205,7 +205,8 @@ class DanmuGiftThx(WsDanmuClient):
                         gift_num = info.get('gift_num')
                         coin_type = info.get('coin_type')
                         total_coin = info.get('total_coin', 0)
-                        gift_name_true = gift_name.strip(f'_{coin_type}')
+                        gift_name_true = gift_name
+                        # gift_name_true = gift_name.strip(f'_{coin_type}')
                         fstr = ''
                         if self.user.const_json.get('normal_gift_thx_format') and gift_name_true in self.user.const_json.get('normal_gift_thx_format'):
                             fstr = self.user.const_json.get('normal_gift_thx_format').get(gift_name_true)
