@@ -12,7 +12,7 @@ from printer import info as print
 from danmu.bili_abc import bili_danmu
 from reqs.utils import UtilsReq
 from reqs.custom import BanUserReq
-from .bili_danmu import WsDanmuClient
+from .bili_abc.bili_danmu import WsDanmuClient
 
 
 DELAY = 0
@@ -322,6 +322,7 @@ class DanmuGiftThx(WsDanmuClient):
 
     async def pk_bd(self):
         # PK偷塔
+        # self.set_user()
         json_rsp = await self.user.req_s(UtilsReq.get_room_info, self.user, self._room_id)
         ruid = json_rsp.get('data', {}).get('uid', 0)
 
@@ -336,7 +337,7 @@ class DanmuGiftThx(WsDanmuClient):
                 if self.pk_end_time > time.time() or not self.end:
                     # print(
                     #     f'PK还有{self.pk_end_time - time.time()}s结束, 分差{self.pk_op_votes-self.pk_me_votes}')
-                    if self.pk_end_time - time.time() < 1 and self.pk_op_votes - self.pk_me_votes >= 0 and self.pk_end_time - time.time() > -5:
+                    if self.pk_end_time - time.time() < 2 and self.pk_op_votes - self.pk_me_votes >= 0 and self.pk_end_time - time.time() > -5:
                         # print(f'开启偷塔, 时限{self.pk_end_time - time.time()}')
                         # print(f'当前分差{self.pk_op_votes-self.pk_me_votes}')
                         if self.pk_op_votes - self.pk_me_votes > self.user.pk_max_votes or self.pk_now_use > self.user.pk_max_votes:
@@ -344,7 +345,7 @@ class DanmuGiftThx(WsDanmuClient):
                             #       self.user.pk_max_votes, self.pk_now_use, self.user.pk_max_votes)
                             continue
                         need = ((self.pk_op_votes-self.pk_me_votes)/self.user.pk_gift_rank)+3
-                        gift_id = self.user.pk_gift_id  # 这个礼物是52分 20014
+                        gift_id = self.user.pk_gift_id
                         gift_num = need
                         print(f'赠送{need}个{self.user.pk_gift_id}')
                         # print(UtilsReq.send_gold, self.user, gift_id, gift_num, self._room_id, ruid)
@@ -473,8 +474,22 @@ class DanmuGiftThx(WsDanmuClient):
                 self.pk_end_time = t + delay + DELAY
             elif cmd.startswith('ANCHOR'):
                 print(data)
-            # elif cmd in ['WELCOME_GUARD', 'WELCOME', 'NOTICE_MSG', 'SYS_GIFT', 'ACTIVITY_BANNER_UPDATE_BLS', 'ENTRY_EFFECT', 'ROOM_RANK', 'ACTIVITY_BANNER_UPDATE_V2', 'COMBO_END', 'ROOM_REAL_TIME_MESSAGE_UPDATE', 'ROOM_BLOCK_MSG', 'WISH_BOTTLE', 'WEEK_STAR_CLOCK', 'ROOM_BOX_MASTER', 'HOUR_RANK_AWARDS', 'ROOM_SKIN_MSG', 'RAFFLE_START', 'RAFFLE_END', 'GUARD_LOTTERY_START', 'GUARD_LOTTERY_END', 'GUARD_MSG', 'USER_TOAST_MSG', 'SYS_MSG', 'COMBO_SEND', 'ROOM_BOX_USER', 'TV_START', 'TV_END', 'ANCHOR_LOT_END', 'ANCHOR_LOT_AWARD', 'ANCHOR_LOT_CHECKSTATUS', 'ANCHOR_LOT_STAR', 'ROOM_CHANGE', 'LIVE', 'new_anchor_reward', 'room_admin_entrance', 'ROOM_ADMINS', 'PREPARING']:
-            #     pass
+            elif cmd in [
+                'NOTICE_MSG', 
+                'WELCOME_GUARD', 
+                'WELCOME', 
+                'NOTICE_MSG', 
+                'SYS_GIFT', 
+                'ACTIVITY_BANNER_UPDATE_BLS', 
+                'ENTRY_EFFECT', 'ROOM_RANK', 
+                'ACTIVITY_BANNER_UPDATE_V2', 'COMBO_END', 'ROOM_REAL_TIME_MESSAGE_UPDATE', 
+                'ROOM_BLOCK_MSG', 'WISH_BOTTLE', 'WEEK_STAR_CLOCK', 'ROOM_BOX_MASTER', 
+                'HOUR_RANK_AWARDS', 'ROOM_SKIN_MSG', 'RAFFLE_START', 'RAFFLE_END', 'GUARD_LOTTERY_START', 
+                'GUARD_LOTTERY_END', 'GUARD_MSG', 'USER_TOAST_MSG', 'SYS_MSG', 'COMBO_SEND', 'ROOM_BOX_USER', 
+                'TV_START', 'TV_END', 'ANCHOR_LOT_END', 'ANCHOR_LOT_AWARD', 'ANCHOR_LOT_CHECKSTATUS', 
+                'ANCHOR_LOT_STAR', 'ROOM_CHANGE', 'LIVE', 'new_anchor_reward', 'room_admin_entrance', 
+                'ROOM_ADMINS', 'PREPARING', 'INTERACT_WORD']:
+                pass
             else:
                 print(data)
         except:

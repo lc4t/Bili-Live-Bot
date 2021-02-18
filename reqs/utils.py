@@ -84,7 +84,7 @@ class UtilsReq:
         # 金瓜子
         url = f'{API_LIVE}/gift/v2/Live/send'
         data = {
-            'uid': user.dict_bili['uid'],
+            'uid': user.dict_user['uid'],
             'gift_id': gift_id,
             'ruid': ruid,  # 收到uid
             'send_ruid': 0,
@@ -98,10 +98,10 @@ class UtilsReq:
             'storm_beat_id': 0,
             'metadata': '',
             'price': 0,
-            'csrf_token': user.dict_bili['csrf'],
-            'csrf': user.dict_bili['csrf']
+            'csrf_token': user.dict_user['csrf'],
+            'csrf': user.dict_user['csrf'],
         }
-        json_rsp = await user.bililive_session.request_json('POST', url, headers=user.dict_bili['pcheaders'], data=data)
+        json_rsp = await user.bililive_session.request_json('POST', url, headers=user.pc.headers, data=data)
         return json_rsp
 
     @staticmethod
