@@ -1,14 +1,15 @@
 import asyncio
+import json
 from itertools import count
 from typing import Callable, Optional
 
-import printer
-import json
 import conf_loader
 import exceptions
-from web_session import WebSession
+import printer
 from tasks.login import LoginTask
-from .platform import PcPlatform, AppPlatform, TvPlatform
+from web_session import WebSession
+
+from .platform import AppPlatform, PcPlatform, TvPlatform
 
 
 # user.toml 里面的东西全在self.dict_user里面，与 user 一一对应
@@ -25,7 +26,7 @@ class User:
         'dyn_lottery_friends',
         '_waiting_login', '_loop',
 
-        ### 
+        ###
         'manage_room', 'alerts', 'gift_comb_delay', 'alert_second', 'gift_thx_format', 'focus_thx_format',
         'danmu_length', 'random_list_1', 'random_list_2', 'random_list_3',
         'medal_update_format', 'medal_update_check_delay',
@@ -34,6 +35,7 @@ class User:
         'reply', 'ban',
         'height', 'weight',
         'const_json', 'only_live_alert',
+        'anchor_alert_format',
     )
 
     def __init__(
@@ -61,6 +63,7 @@ class User:
         self.medal_update_check_delay = dict_user.get('medal_update_check_delay', 30)
         self.only_live_thx = dict_user.get('only_live_thx', False)
         self.only_live_alert = dict_user.get('only_live_alert', True)
+        self.anchor_alert_format = dict_user.get('anchor_alert_format', '')
         self.reply = dict_user.get('reply', [])
         self.ban = dict_user.get('ban', [])
         self.height = dict_user.get('height', 0)
@@ -71,9 +74,7 @@ class User:
         else:
             self.const_json = {}
 
-
         self.fans_check_delay = dict_user.get('fans_check_delay', 20)
-        
 
         self.random_list_1 = dict_user.get('random_list_1', [])
         self.random_list_2 = dict_user.get('random_list_2', [])

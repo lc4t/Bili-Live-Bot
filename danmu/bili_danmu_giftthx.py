@@ -252,7 +252,7 @@ class DanmuGiftThx(WsDanmuClient):
             traceback.print_exc()
 
     async def send_danmu(self, text, default_length=30, retry=5):
-        # return
+        return
         if retry < 0:
             return
         now = datetime.datetime.now()
