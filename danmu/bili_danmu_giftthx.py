@@ -407,9 +407,16 @@ class DanmuGiftThx(WsDanmuClient):
                 pass
             elif cmd == 'PK_BATTLE_PRO_TYPE':
                 pass
+            elif cmd == 'ANCHOR_LOT_AWARD':
+                if self.user.anchor_alert_format:
+                    fstr = self.user.anchor_alert_format
+                    users = data.get('data').get('award_users')
+                    users = [i.get('uname') for i in users]
+                    username = '、'.join(users)
+                    award_name = data.get('data').get('award_name')
+                    award_num = data.get('data').get('award_num')
+                    await self.send_danmu(fstr.format(username=username, num=award_num, giftname=award_name))
 
-            elif cmd.startswith('ANCHOR'):
-                print(data)
             elif cmd in ['LIVE']:
                 print(f'开播 {self._room_id}')
                 self.is_live = True
@@ -429,10 +436,11 @@ class DanmuGiftThx(WsDanmuClient):
                 'ROOM_BLOCK_MSG', 'WISH_BOTTLE', 'WEEK_STAR_CLOCK', 'ROOM_BOX_MASTER',
                 'HOUR_RANK_AWARDS', 'ROOM_SKIN_MSG', 'RAFFLE_START', 'RAFFLE_END', 'GUARD_LOTTERY_START',
                 'GUARD_LOTTERY_END', 'GUARD_MSG', 'USER_TOAST_MSG', 'SYS_MSG', 'COMBO_SEND', 'ROOM_BOX_USER',
-                'TV_START', 'TV_END', 'ANCHOR_LOT_END', 'ANCHOR_LOT_AWARD', 'ANCHOR_LOT_CHECKSTATUS',
+                'TV_START', 'TV_END', 'ANCHOR_LOT_END', 'ANCHOR_LOT_CHECKSTATUS',
                 'ANCHOR_LOT_STAR', 'ROOM_CHANGE', 'LIVE', 'new_anchor_reward', 'room_admin_entrance',
                     'ROOM_ADMINS', 'PREPARING', 'INTERACT_WORD', 'WIDGET_BANNER', 'HOT_RANK_CHANGED',
-                    'ONLINE_RANK_TOP3', 'ANCHOR_LOT_START', 'ANCHOR_LOT_CHECKSTATUS', 'HOT_RANK_SETTLEMENT']:
+                    'ONLINE_RANK_TOP3', 'ANCHOR_LOT_START', 'ANCHOR_LOT_CHECKSTATUS', 'HOT_RANK_SETTLEMENT',
+                    'PK_BATTLE_SETTLE_V2']:
                 pass
             else:
                 print(data)
