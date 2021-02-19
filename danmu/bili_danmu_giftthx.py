@@ -1,19 +1,21 @@
 
 import asyncio
-import traceback
-import json
 import copy
 import datetime
-import random
-import time
-import re
+import json
 import queue
-from printer import info as print
-from danmu.bili_abc import bili_danmu
-from reqs.utils import UtilsReq
-from reqs.custom import BanUserReq
-from .bili_abc.bili_danmu import WsDanmuClient
+import random
+import re
+import time
+import traceback
 
+from printer import info as print
+from reqs.custom import BanUserReq
+from reqs.utils import UtilsReq
+
+from danmu.bili_abc import bili_danmu
+
+from .bili_abc.bili_danmu import WsDanmuClient
 
 DELAY = 0
 
@@ -39,6 +41,10 @@ class DanmuGiftThx(WsDanmuClient):
         status = json_rsp.get('data', {}).get('live_status')
         self.is_live = status
         return self.is_live
+
+    def write_log(self, text):
+        now = datetime.datetime.now()
+        open(f'log/{self._room_id}-{now.year}{now.month:02d}{now.day:02d}.log', 'a').write(f'[{now}]{text}\n')
 
     async def run_alert(self):
         if len(self.user.alerts) == 0:
@@ -195,14 +201,14 @@ class DanmuGiftThx(WsDanmuClient):
                                 'total_coin': total_coin+already_total_coin
                             })  # 更新数量
 
-                # print(wait_to_send_danmu)
-
                 # 检查时间是否达到推出标准
                 # 这里可以重写感谢弹幕
-
+                # print(wait_to_send_danmu)
                 for username, gifts in wait_to_send_danmu.items():
                     for gift_name, info in gifts.items():
                         gift_num = info.get('gift_num')
+                        if gift_num == 0:
+                            continue
                         coin_type = info.get('coin_type')
                         total_coin = info.get('total_coin', 0)
                         # flag_gold
@@ -216,51 +222,58 @@ class DanmuGiftThx(WsDanmuClient):
                             fstr = self.user.const_json.get('normal_gift_thx_format').get(gift_name_true)
                         elif coin_type == 'silver':
                             print(gift_name)
+                            self.write_log(f'{gift_name}没有设置')
                             fstr = self.user.silver_gift_thx_format
                         else:
                             fstr = self.user.gold_gift_thx_format
                             print(gift_name)
+                            self.write_log(f'{gift_name}没有设置')
                         # print(fstr)
-                        if gift_num == 0:
-                            continue
+
                         if time.time() - info.get('t') > self.user.gift_comb_delay:
                             if self.is_live or (not self.user.only_live_thx):
 
                                 # self.user.gift_thx_silver_format
                                 await self.send_danmu(fstr.format(username=username,
-                                                                num=gift_num,
-                                                                total_coin=total_coin,
-                                                                giftname=gift_name_true,
-                                                                random1=random.choice(
-                                                                    self.user.random_list_1),
-                                                                random2=random.choice(
-                                                                    self.user.random_list_2),
-                                                                random3=random.choice(self.user.random_list_3)))
+                                                                  num=gift_num,
+                                                                  total_coin=total_coin,
+                                                                  giftname=gift_name_true,
+                                                                  random1=random.choice(
+                                                                      self.user.random_list_1),
+                                                                  random2=random.choice(
+                                                                      self.user.random_list_2),
+                                                                  random3=random.choice(self.user.random_list_3)))
                                 await self.game_log(coin_type, total_coin)
                             wait_to_send_danmu[username][gift_name].update(
                                 {'gift_num': 0, 'total_coin': 0})
 
-                await asyncio.sleep(0.1)
+                await asyncio.sleep(0.5)
         except:
             traceback.print_exc()
 
     async def send_danmu(self, text, default_length=30, retry=5):
+        # return
         if retry < 0:
             return
-        print('try:', text, len(text))
+        now = datetime.datetime.now()
+        print(f'try to send length{len(text)}: {text}')
         default_length = self.user.danmu_length
         msg = text[0:default_length]
         json_rsp = await self.user.req_s(UtilsReq.send_danmu, self.user, msg, self._room_id)
-        print(json_rsp)
+        print(f'[{now}]{json_rsp})
+        self.write_log(text)
+        self.write_log(json.dumps(json_rsp, ensure_ascii=False))
+        # open(f'log/{self._room_id}-{now.year}{now.month:02d}{now.day:02d}.log', 'a').write(text + '\n')
+        # open(f'log/{self._room_id}-{now.year}{now.month:02d}{now.day:02d}.log', 'a').write(json.dumps(json_rsp)+'\n')
         if json_rsp.get('msg', '') == 'msg in 1s':
             await asyncio.sleep(0.5)
-            return await self.send_danmu(text, default_length, retry)
+            return await self.send_danmu(text, default_length, retry-1)
         elif json_rsp.get('msg', '') == '':
             pass
         elif json_rsp.get('msg', '') in ['内容非法', 'f']:
             print(f'{text} --> 非法')
-            print(json_rsp)
-            return 
+            # print(json_rsp)
+            return
             # text = self.replace_num(text)
             # return await self.send_danmu(text, default_length, retry-1)
         elif json_rsp.get('msg', '') == 'msg repeat':
@@ -268,8 +281,9 @@ class DanmuGiftThx(WsDanmuClient):
             # await asyncio.sleep(0.5)
             # return await self.send_danmu(text, default_length, retry-3)
         elif json_rsp.get('msg', '') == '超出限制长度':
-            print(text)
-            print(json_rsp)
+            print(f'{text} --> 超出长度')
+            # print(text)
+            # print(json_rsp)
             return await self.send_danmu(text, default_length-10, retry)
 
         if len(text) > default_length:
@@ -341,6 +355,7 @@ class DanmuGiftThx(WsDanmuClient):
     async def handle_danmu(self, data: dict):
         cmd = data['cmd']
         # print(data)
+        self.write_log(json.dumps(data, ensure_ascii=False))
         try:
             # self.user.height += 1
             # self.user.update_log()
@@ -391,6 +406,7 @@ class DanmuGiftThx(WsDanmuClient):
                 pass
             elif cmd == 'PK_BATTLE_PRO_TYPE':
                 pass
+
             elif cmd.startswith('ANCHOR'):
                 print(data)
             elif cmd in ['LIVE']:
@@ -401,20 +417,21 @@ class DanmuGiftThx(WsDanmuClient):
                 self.is_live = False
             elif cmd in [
                 'ONLINE_RANK_V2', 'ONLINE_RANK_COUNT',
-                'NOTICE_MSG', 
-                'WELCOME_GUARD', 
-                'WELCOME', 
-                'NOTICE_MSG', 
-                'SYS_GIFT', 
-                'ACTIVITY_BANNER_UPDATE_BLS', 
-                'ENTRY_EFFECT', 'ROOM_RANK', 
-                'ACTIVITY_BANNER_UPDATE_V2', 'COMBO_END', 'ROOM_REAL_TIME_MESSAGE_UPDATE', 
-                'ROOM_BLOCK_MSG', 'WISH_BOTTLE', 'WEEK_STAR_CLOCK', 'ROOM_BOX_MASTER', 
-                'HOUR_RANK_AWARDS', 'ROOM_SKIN_MSG', 'RAFFLE_START', 'RAFFLE_END', 'GUARD_LOTTERY_START', 
-                'GUARD_LOTTERY_END', 'GUARD_MSG', 'USER_TOAST_MSG', 'SYS_MSG', 'COMBO_SEND', 'ROOM_BOX_USER', 
-                'TV_START', 'TV_END', 'ANCHOR_LOT_END', 'ANCHOR_LOT_AWARD', 'ANCHOR_LOT_CHECKSTATUS', 
-                'ANCHOR_LOT_STAR', 'ROOM_CHANGE', 'LIVE', 'new_anchor_reward', 'room_admin_entrance', 
-                'ROOM_ADMINS', 'PREPARING', 'INTERACT_WORD', 'WIDGET_BANNER', 'HOT_RANK_CHANGED']:
+                'NOTICE_MSG',
+                'WELCOME_GUARD',
+                'WELCOME',
+                'NOTICE_MSG',
+                'SYS_GIFT',
+                'ACTIVITY_BANNER_UPDATE_BLS',
+                'ENTRY_EFFECT', 'ROOM_RANK',
+                'ACTIVITY_BANNER_UPDATE_V2', 'COMBO_END', 'ROOM_REAL_TIME_MESSAGE_UPDATE',
+                'ROOM_BLOCK_MSG', 'WISH_BOTTLE', 'WEEK_STAR_CLOCK', 'ROOM_BOX_MASTER',
+                'HOUR_RANK_AWARDS', 'ROOM_SKIN_MSG', 'RAFFLE_START', 'RAFFLE_END', 'GUARD_LOTTERY_START',
+                'GUARD_LOTTERY_END', 'GUARD_MSG', 'USER_TOAST_MSG', 'SYS_MSG', 'COMBO_SEND', 'ROOM_BOX_USER',
+                'TV_START', 'TV_END', 'ANCHOR_LOT_END', 'ANCHOR_LOT_AWARD', 'ANCHOR_LOT_CHECKSTATUS',
+                'ANCHOR_LOT_STAR', 'ROOM_CHANGE', 'LIVE', 'new_anchor_reward', 'room_admin_entrance',
+                    'ROOM_ADMINS', 'PREPARING', 'INTERACT_WORD', 'WIDGET_BANNER', 'HOT_RANK_CHANGED',
+                    'ONLINE_RANK_TOP3', 'ANCHOR_LOT_START', 'ANCHOR_LOT_CHECKSTATUS']:
                 pass
             else:
                 print(data)
