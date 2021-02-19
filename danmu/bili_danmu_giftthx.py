@@ -256,7 +256,7 @@ class DanmuGiftThx(WsDanmuClient):
         if retry < 0:
             return
         now = datetime.datetime.now()
-        print(f'try to send length{len(text)}: {text}')
+        print(f'try to send length@{len(text)}: {text}')
         default_length = self.user.danmu_length
         msg = text[0:default_length]
         json_rsp = await self.user.req_s(UtilsReq.send_danmu, self.user, msg, self._room_id)
@@ -395,7 +395,8 @@ class DanmuGiftThx(WsDanmuClient):
                     if self.user.const_json.get('normal_gift_thx_format') and gift_name in self.user.const_json.get('normal_gift_thx_format'):
                         fstr = self.user.const_json.get('normal_gift_thx_format').get(gift_name)
                     await self.send_danmu(fstr.format(username=username, num=gift_num, giftname=gift_name))
-
+            elif cmd.startswith('PK_'):
+                pass
             elif cmd == 'PK_BATTLE_START':
                 pass
             elif cmd == 'PK_BATTLE_PROCESS':
@@ -431,7 +432,7 @@ class DanmuGiftThx(WsDanmuClient):
                 'TV_START', 'TV_END', 'ANCHOR_LOT_END', 'ANCHOR_LOT_AWARD', 'ANCHOR_LOT_CHECKSTATUS',
                 'ANCHOR_LOT_STAR', 'ROOM_CHANGE', 'LIVE', 'new_anchor_reward', 'room_admin_entrance',
                     'ROOM_ADMINS', 'PREPARING', 'INTERACT_WORD', 'WIDGET_BANNER', 'HOT_RANK_CHANGED',
-                    'ONLINE_RANK_TOP3', 'ANCHOR_LOT_START', 'ANCHOR_LOT_CHECKSTATUS']:
+                    'ONLINE_RANK_TOP3', 'ANCHOR_LOT_START', 'ANCHOR_LOT_CHECKSTATUS', 'HOT_RANK_SETTLEMENT']:
                 pass
             else:
                 print(data)
