@@ -337,9 +337,10 @@ class DanmuGiftThx(WsDanmuClient):
             reply = r.get('reply')
 
             check = re.findall(key, danmu)
+            print(check)
             if len(check) > 0 and len(check[0])/len(danmu) >= percent:
                 await self.send_danmu(reply.format(weight=weight, height=height))
-                return
+                return True
 
     async def auto_ban(self, username: str, uid: int, danmu: str):
         for r in self.user.ban:
@@ -351,7 +352,7 @@ class DanmuGiftThx(WsDanmuClient):
             if len(check) > 0 and len(check[0])/len(danmu) >= percent:
                 json_rsp = await self.user.req_s(BanUserReq.ban_user, self.user, self._room_id, uid, int(hour))
                 print(json_rsp)
-                return
+                return True
 
     async def handle_danmu(self, data: dict):
         cmd = data['cmd']
@@ -362,6 +363,13 @@ class DanmuGiftThx(WsDanmuClient):
             # self.user.update_log()
             if cmd == 'DANMU_MSG':
                 flag = data['info'][0][9]
+                if flag == 0:
+                    username = data['info'][2][1]
+                    userid = data['info'][2][0]
+                    content = data['info'][1]
+                    r = await self.auto_ban(username, userid, content)
+                    b = await self.auto_reply(username, userid, content)
+
                 # if flag == 0:
                 #     print(
                 #         f"{data['info'][2][1]}({data['info'][2][0]})在{self._room_id}: {data['info'][1]}")
