@@ -338,20 +338,11 @@ class DanmuGiftThx(WsDanmuClient):
         while(1):
             try:
                 if self.pk_end_time > time.time() or not self.end:
-
-
-<< << << < HEAD
-                    # print(f'PK还有{self.pk_end_time - time.time()}s结束, 分差{self.pk_op_votes-self.pk_me_votes}')
-                    if self.pk_end_time - time.time() < 4 and self.pk_op_votes - self.pk_me_votes >= 0 and self.pk_end_time - time.time() > -5:
-                        print(f'开启偷塔, 时限{self.pk_end_time - time.time()}')
-                        print(f'当前分差{self.pk_op_votes-self.pk_me_votes}')
-== == == =
                     # print(
                     #     f'PK还有{self.pk_end_time - time.time()}s结束, 分差{self.pk_op_votes-self.pk_me_votes}')
                     if self.pk_end_time - time.time() < 2 and self.pk_op_votes - self.pk_me_votes >= 0 and self.pk_end_time - time.time() > -5:
                         # print(f'开启偷塔, 时限{self.pk_end_time - time.time()}')
                         # print(f'当前分差{self.pk_op_votes-self.pk_me_votes}')
->>>>>> > 48f8790513422d1944a9b3c144f9e06f474990b3
                         if self.pk_op_votes - self.pk_me_votes > self.user.pk_max_votes or self.pk_now_use > self.user.pk_max_votes:
                             # print('超额了', self.pk_op_votes - self.pk_me_votes, self.user.pk_max_votes, self.pk_now_use, self.user.pk_max_votes)
                             continue
