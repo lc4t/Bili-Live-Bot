@@ -260,7 +260,7 @@ class DanmuGiftThx(WsDanmuClient):
         default_length = self.user.danmu_length
         msg = text[0:default_length]
         json_rsp = await self.user.req_s(UtilsReq.send_danmu, self.user, msg, self._room_id)
-        print(f'[{now}]{json_rsp})
+        print(f'[{now}]{json_rsp}')
         self.write_log(text)
         self.write_log(json.dumps(json_rsp, ensure_ascii=False))
         # open(f'log/{self._room_id}-{now.year}{now.month:02d}{now.day:02d}.log', 'a').write(text + '\n')
