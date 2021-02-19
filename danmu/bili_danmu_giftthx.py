@@ -256,7 +256,7 @@ class DanmuGiftThx(WsDanmuClient):
         if retry < 0:
             return
         now = datetime.datetime.now()
-        print(f'try to send length@{len(text)}: {text}')
+        print(f'try to send length@{len(text)}/{default_length}: {text}')
         default_length = self.user.danmu_length
         msg = text[0:default_length]
         json_rsp = await self.user.req_s(UtilsReq.send_danmu, self.user, msg, self._room_id)
@@ -287,7 +287,8 @@ class DanmuGiftThx(WsDanmuClient):
             return await self.send_danmu(text, default_length-10, retry)
 
         if len(text) > default_length:
-            await asyncio.sleep(1)
+            print(f'{text} --> 第二部分发出')
+            await asyncio.sleep(0.5)
             await self.send_danmu(text[default_length:], default_length, retry)
 
     async def game_log(self, coin_type, total_coin):
