@@ -337,10 +337,10 @@ class DanmuGiftThx(WsDanmuClient):
             reply = r.get('reply')
 
             check = re.findall(key, danmu)
-            # print(check)
-            if check:
-                print(check)
+
+
             if len(check) > 0 and len(check[0])/len(danmu) >= percent:
+                print(check, danmu, percent, key)
                 await self.send_danmu(reply.format(weight=weight, height=height))
                 return True
 
