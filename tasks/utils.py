@@ -34,7 +34,7 @@ class UtilsTask:
             room_id = 23058
             if await UtilsTask.is_ok_as_monitor(user, room_id, area_id):
                 return room_id
-
+                
         while True:
             json_rsp = await user.req_s(UtilsReq.get_rooms_by_area, user, area_id)
             list_rooms = json_rsp['data']['list']
@@ -42,10 +42,10 @@ class UtilsTask:
                 room_id = random.choice(list_rooms)['roomid']
                 if await UtilsTask.is_ok_as_monitor(user, room_id, area_id):
                     return room_id
-            elif not area_id in await UtilsTask.fetch_blive_areas(user):  # 运行过程中某个分区删除
+            elif not area_id in await UtilsTask.fetch_blive_areas(user): # 运行过程中某个分区删除
                 return None
             await asyncio.sleep(30)
-
+                
     @staticmethod
     async def is_ok_as_monitor(user, room_id, area_id) -> bool:
         if not await UtilsTask.is_normal_room(user, room_id):
@@ -57,7 +57,7 @@ class UtilsTask:
             # data['live_status']  # 1/0
             return area_id == data['parent_area_id'] and bool(data['live_status'])
         return False
-
+        
     @staticmethod
     async def send_gift(user, room_id, num_sent, bag_id, gift_id):
         if not num_sent or not room_id:
@@ -77,7 +77,7 @@ class UtilsTask:
             print(f'# 送给房间{room_id:^9}礼物: {data["gift_name"]}X{data["gift_num"]}')
         else:
             print("# 错误", json_rsp['msg'])
-
+            
     @staticmethod
     async def buy_gift(user, room_id, num_sent, coin_type, gift_id):
         if not num_sent or not room_id:
@@ -92,7 +92,7 @@ class UtilsTask:
             print(f'# 送给房间{room_id:^9}礼物: {data["gift_name"]}X{data["gift_num"]}')
         else:
             print("# 错误", json_rsp['msg'])
-
+            
     @staticmethod
     async def fetch_giftbags(user):
         json_rsp = await user.req_s(UtilsReq.fetch_giftbags, user)
@@ -135,7 +135,7 @@ class UtilsTask:
             else:
                 results = [medal[:3] for medal in sorted(medals, key=itemgetter(3), reverse=True)]
             return results
-
+    
     @staticmethod
     async def open_capsule(user, num_opened):
         if num_opened not in (1, 10, 100):
@@ -145,7 +145,7 @@ class UtilsTask:
         if not json_rsp['code']:
             for i in json_rsp['data']['text']:
                 print(i)
-
+                
     @staticmethod
     async def get_real_roomid(user, room_id):
         json_rsp = await user.req_s(UtilsReq.init_room, user, room_id)
@@ -161,7 +161,7 @@ class UtilsTask:
         # 房间不存在
         elif json_rsp['code'] == 60004:
             print(json_rsp['msg'])
-
+            
     @staticmethod
     async def check_uid_by_roomid(user, room_id):
         json_rsp = await user.req_s(UtilsReq.init_room, user, room_id)
@@ -170,7 +170,7 @@ class UtilsTask:
             print(f'房间号{room_id}对应的UID为{uid}')
             return int(uid)
         return None
-
+            
     @staticmethod
     async def send_danmu(user, msg, room_id):
         json_rsp = await user.req_s(UtilsReq.send_danmu, user, msg, room_id)

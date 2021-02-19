@@ -56,7 +56,7 @@ class LoginTask(Forced, Wait, Multi):
                 'access_key': access_key,
                 'refresh_token': refresh_token,
                 'cookie': cookie
-            }
+                }
             user.update_login_data(login_data)
             return True
         return False
@@ -74,27 +74,27 @@ class LoginTask(Forced, Wait, Multi):
         )
         url_password = parse.quote_plus(crypto_password)
         url_name = parse.quote_plus(name)
+        
         json_rsp = await LoginReq.login(user, url_name, url_password)
         while json_rsp['code'] == -105:
             binary_rsp = await LoginReq.fetch_capcha(user)
             captcha = await LoginReq.cnn_captcha(user, binary_rsp)
             json_rsp = await LoginReq.login(user, url_name, url_password, captcha)
-
+                
         if not json_rsp['code'] and not json_rsp['data']['status']:
             data = json_rsp['data']
             access_key = data['token_info']['access_token']
             refresh_token = data['token_info']['refresh_token']
-            cookies = data['cookie_info']['cookies']
-            list_cookies = [f'{i["name"]}={i["value"]}' for i in cookies]
-            cookie = ';'.join(list_cookies)
+            dict_cookies = {i["name"]: i["value"] for i in data['cookie_info']['cookies']}
+            cookie = ';'.join(f'{key}={value}' for key, value in dict_cookies.items())
             login_data = {
-                'csrf': cookies[0]['value'],
+                'csrf': dict_cookies['bili_jct'],
                 'access_key': access_key,
                 'refresh_token': refresh_token,
                 'cookie': cookie,
-                'uid': cookies[1]['value']
-            }
-
+                'uid': data['token_info']['mid']
+                }
+            
             user.update_login_data(login_data)
             user.info('登陆成功')
             return True
@@ -105,7 +105,7 @@ class LoginTask(Forced, Wait, Multi):
                 'refresh_token': '',
                 'cookie': '',
                 'uid': 'NULL'
-            }
+                }
             # print(dic_saved_session)
             user.update_login_data(login_data)
             user.info(f'登录失败,错误信息为:{json_rsp}')

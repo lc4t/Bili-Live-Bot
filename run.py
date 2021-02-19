@@ -147,7 +147,7 @@ async def init_danmu_managers():
                 room_id=int(room),
                 area_id=-1,
                 session=session)
-            danmu_.set_user(user)
+            await danmu_.set_user(user)
             danmu_managers.append(danmu_)
     return danmu_managers
 danmu_manager = loop.run_until_complete(init_danmu_managers())

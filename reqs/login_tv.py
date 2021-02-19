@@ -1,4 +1,7 @@
 import base64
+from urllib import parse
+
+import requests
     
 import utils
 from json_rsp_ctrl import Ctrl, JsonRspType, In
@@ -30,40 +33,45 @@ class LoginReq:
         
     @staticmethod
     async def fetch_key(user):
-        url = 'https://passport.bilibili.com/api/oauth2/getKey'
-        params = user.app_sign()
+        url = 'https://passport.snm0516.aisee.tv/api/oauth2/getKey'
+        params = user.tv_sign()
         json_rsp = await user.login_session.request_json('POST', url, params=params, ctrl=LOGIN_CTRL)
         return json_rsp
 
     @staticmethod
     async def fetch_capcha(user):
-        url = "https://passport.bilibili.com/captcha"
-        binary_rsp = await user.login_session.request_binary('GET', url)
+        url = "https://passport.snm0516.aisee.tv/api/captcha?token=5598158bcd8511e1"
+        binary_rsp = await user.login_session.request_binary('GET', url, headers=user.tv.headers)
         return binary_rsp
 
     @staticmethod
     async def login(user, url_name, url_password, captcha=''):
-        validate = ''
-        challenge = ''
         extra_params = {
-            'seccode': f'{validate}|jordan' if validate else '',
-            'validate': validate,
-            'challenge': challenge,
-            'username': url_name,
+            'captcha': captcha,
             'password': url_password,
-            'ts': utils.curr_time(),
+            'username': url_name,
+            'channel': 'master',
+            'guid': 'XYEBAA3E54D502E17BD606F0589A356902FCF',
+            'token': '5598158bcd8511e1'
         }
-        params = user.app_sign(extra_params)
 
-        # url_password 存在一些 % 这些，b站要求作为 string 不编码为 "%25"
-        # aiohttp doc 符合，但是
-        # https://github.com/aio-libs/aiohttp/blob/10c8ce9567d008d4f92a99ffe45f8d0878e99275/aiohttp/client_reqrep.py#L215-L219
-        # yarl 兼容问题
-        # 故手动处理
-        params_str = utils.prepare_params(params)
-        url_aiohttp = f'https://passport.bilibili.com/x/passport-login/oauth2/login?{params_str}'
-        json_rsp = await user.login_session.request_json('POST', url_aiohttp, headers=user.app.headers, params=None, ctrl=LOGIN_CTRL)
+        params = user.tv_sign(extra_params)
+        url = "https://passport.snm0516.aisee.tv/api/tv/login"
+
+        json_rsp = await user.login_session.request_json('POST', url, headers=user.app.headers, params=params, ctrl=LOGIN_CTRL)
         return json_rsp
+
+    @staticmethod
+    async def access_token_2_cookies(user, access_token):
+        extra_params = {
+            'access_key': access_token,
+            'gourl': 'https%3A%2F%2Faccount.bilibili.com%2Faccount%2Fhome',
+        }
+
+        params = user.tv_sign(extra_params)
+        url = f"https://passport.bilibili.com/api/login/sso"
+        rsp = await user.login_session.request('GET', url, allow_redirects=False, params=params, ok_status_codes=(302,))
+        return rsp
 
     @staticmethod
     async def is_token_usable(user):
@@ -79,10 +87,8 @@ class LoginReq:
             ** dict_cookie
         }
         params = user.app_sign(extra_params)
-        # 这里没办法，cookie 里面有特殊字符，与 yarl 兼容无关
-        params_str = utils.prepare_params(params)
-        true_url = f'https://passport.bilibili.com/api/v3/oauth2/info?{params_str}'
-        json_rsp = await user.login_session.request_json('GET', true_url, params=None, headers=user.app.headers, ctrl=LOGIN_CTRL)
+        true_url = f'https://passport.bilibili.com/api/v3/oauth2/info'
+        json_rsp = await user.login_session.request_json('GET', true_url, params=params, headers=user.app.headers, ctrl=LOGIN_CTRL)
         return json_rsp
 
     @staticmethod
@@ -100,10 +106,8 @@ class LoginReq:
             ** dict_cookie
         }
         params = user.app_sign(extra_params)
-        # 这里没办法，cookie 里面有特殊字符，与 yarl 兼容无关
-        params_str = utils.prepare_params(params)
-        url = f'https://passport.bilibili.com/api/v2/oauth2/refresh_token?{params_str}'
-        json_rsp = await user.login_session.request_json('POST', url, headers=user.app.headers, params=None, ctrl=LOGIN_CTRL)
+        url = f'https://passport.bilibili.com/api/v2/oauth2/refresh_token'
+        json_rsp = await user.login_session.request_json('POST', url, headers=user.app.headers, params=params, ctrl=LOGIN_CTRL)
         print('json_rsp', json_rsp)
         return json_rsp
         

@@ -3,7 +3,6 @@ import asyncio
 from .utils import UtilsTask
 from reqs.live_daily_job import (
     HeartBeatReq,
-    RecvHeartGiftReq,
     OpenSilverBoxReq,
     RecvDailyBagReq,
     SignReq,
@@ -28,23 +27,6 @@ class HeartBeatTask(Sched, DontWait, Unique):
             json_rsp0 = await user.req_s(HeartBeatReq.pc_heartbeat, user)
             json_rsp1 = await user.req_s(HeartBeatReq.app_heartbeat, user)
             user.info(f'心跳包(5分钟左右间隔){json_rsp0} {json_rsp1}')
-            await asyncio.sleep(300)
-
-                
-class RecvHeartGiftTask(Sched, DontWait, Unique):
-    TASK_NAME = 'recv_heart_gift'
-
-    @staticmethod
-    async def check(_):
-        return (-2, (0, 30)),
-        
-    @staticmethod
-    async def work(user):
-        while True:
-            json_rsp = await user.req_s(RecvHeartGiftReq.recv_heartgift, user)
-            if json_rsp['code'] == 400:
-                user.fall_in_jail()
-                return
             await asyncio.sleep(300)
  
                
@@ -129,6 +111,9 @@ class WatchTvTask(Sched, DontWait, Unique):
    
     @staticmethod
     async def work(user):
+        await user.req_s(WatchTvReq.get_info_by_user_app, user)
+        await user.req_s(WatchTvReq.get_info_by_user_pc, user)
+
         while True:
             # -400 done/not yet
             json_rsp = await user.req_s(WatchTvReq.watch_tv, user)
@@ -284,6 +269,7 @@ class SendGiftTask(Sched, DontWait, Unique):
     @staticmethod
     async def work(user, gift_intimacy: dict):
         await SendGiftTask.send_medal_gift(user, gift_intimacy)
+        await asyncio.sleep(7)
         await SendGiftTask.send_expiring_gift(user, gift_intimacy)
 
                 
