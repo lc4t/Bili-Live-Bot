@@ -1,3 +1,5 @@
+import re
+
 from bili_global import API_LIVE
 from json_rsp_ctrl import ZERO_ONLY_CTRL
 
@@ -29,3 +31,13 @@ class PkRaffleHandlerReq:
         url = f'{API_LIVE}/av/v1/Battle/getInfoById?pk_id={pk_id}&roomid={room_id}&pk_version=2'
         json_rsp = await user.bililive_session.request_json('GET', url, ctrl=ZERO_ONLY_CTRL)
         return json_rsp
+
+    @staticmethod
+    async def init(user, room_id):
+        url = f'https://live.bilibili.com/{room_id}'
+        rsp = await user.bililive_session.request_text('GET', url)
+        check = re.findall(r',"battle_id":(\d+),', rsp)
+        if check:
+            return check[0]
+        else:
+            return 0

@@ -332,9 +332,10 @@ class DanmuGiftThx(WsDanmuClient):
             return
 
         # 检查
-        json_rsp = await self.user.req_s(PkRaffleHandlerReq.check, self.user, self._room_id)
-        print(json_rsp.get('data').get('pk'))
-        pk_id = 0
+        pk_id = await self.user.req_s(PkRaffleHandlerReq.init, self.user, self._room_id)
+        # print(json_rsp.get('data').get('pk'))
+        print(pk_id)
+        # pk_id = 200887891
         if pk_id:
             json_rsp = await self.user.req_s(PkRaffleHandlerReq.info, self.user, pk_id, self._room_id)
             self.pk_end_time = json_rsp.get('data').get('pk_frozen_time') + DELAY
@@ -355,16 +356,12 @@ class DanmuGiftThx(WsDanmuClient):
                 print(
                     f'和对方差距{self.pk_op_votes-self.pk_me_votes}分, {self.pk_end_time-time.time()}s后结束')
 
-        ##
-        # 笔芯 20014
-        # await asyncio.sleep(3)
-        # return
         while(1):
             try:
                 if self.pk_end_time > time.time() or not self.end:
                     # print(
                     #     f'PK还有{self.pk_end_time - time.time()}s结束, 分差{self.pk_op_votes-self.pk_me_votes}')
-                    if self.pk_end_time - time.time() < 2 and self.pk_op_votes - self.pk_me_votes >= 0 and self.pk_end_time - time.time() > -5:
+                    if self.pk_end_time - time.time() < 2.5 and self.pk_op_votes - self.pk_me_votes >= 0 and self.pk_end_time - time.time() > -10:
                         # print(f'开启偷塔, 时限{self.pk_end_time - time.time()}')
                         # print(f'当前分差{self.pk_op_votes-self.pk_me_votes}')
                         if self.pk_op_votes - self.pk_me_votes > self.user.pk_max_votes or self.pk_now_use > self.user.pk_max_votes:
@@ -385,7 +382,7 @@ class DanmuGiftThx(WsDanmuClient):
             except:
                 traceback.print_exc()
 
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.05)
 
     async def handle_danmu(self, data: dict):
         cmd = data['cmd']
@@ -437,7 +434,7 @@ class DanmuGiftThx(WsDanmuClient):
 
                 pk_id = data.get('pk_id')
                 t = data.get('timestamp')
-                self.pk_end_time = data.get('data').get('pk_end_time') - 10 + DELAY
+                self.pk_end_time = data.get('data').get('pk_frozen_time') + DELAY
 
             elif cmd == 'PK_BATTLE_PROCESS':
                 print(data)
