@@ -11,6 +11,7 @@ import traceback
 
 from printer import info as print
 from reqs.custom import BanUserReq
+from reqs.pk_raffle_handler import PkRaffleHandlerReq
 from reqs.utils import UtilsReq
 
 from .bili_abc.bili_danmu import WsDanmuClient
@@ -67,18 +68,18 @@ class DanmuGiftThx(WsDanmuClient):
             print('medal_update_format未定义，勋章升级提醒关闭')
             return
 
-        async def get_medals():
-            medal_data = {}
-            json_rsp = await self.user.req_s(UtilsReq.get_room_medal, self.user, self._room_id, uid, 1)
-            total_page = json_rsp.get('data', {}).get('total_page', 1)
-            medal_data.update({x.get('uid'): {'level': x.get('level'), 'uname': x.get('uname')}
-                               for x in json_rsp.get('data', {}).get('list', [])})
-            if total_page > 1:
-                for p in range(2, total_page+1):
-                    json_rsp = await self.user.req_s(UtilsReq.get_room_medal, self.user, self._room_id, uid, p)
-                    medal_data.update({x.get('uid'): {'level': x.get('level'), 'uname': x.get(
-                        'uname')} for x in json_rsp.get('data', {}).get('list', [])})
-            return medal_data
+        # async def get_medals():
+        #     medal_data = {}
+        #     json_rsp = await self.user.req_s(UtilsReq.get_room_medal, self.user, self._room_id, uid, 1)
+        #     total_page = json_rsp.get('data', {}).get('total_page', 1)
+        #     medal_data.update({x.get('uid'): {'level': x.get('level'), 'uname': x.get('uname')}
+        #                        for x in json_rsp.get('data', {}).get('list', [])})
+        #     if total_page > 1:
+        #         for p in range(2, total_page+1):
+        #             json_rsp = await self.user.req_s(UtilsReq.get_room_medal, self.user, self._room_id, uid, p)
+        #             medal_data.update({x.get('uid'): {'level': x.get('level'), 'uname': x.get(
+        #                 'uname')} for x in json_rsp.get('data', {}).get('list', [])})
+        #     return medal_data
 
         medal_rank_already = await get_medals()
 
@@ -329,9 +330,35 @@ class DanmuGiftThx(WsDanmuClient):
         if ruid == 0:
             print('获取uid失败，重启或检查房间号')
             return
+
+        # 检查
+        json_rsp = await self.user.req_s(PkRaffleHandlerReq.check, self.user, self._room_id)
+        print(json_rsp.get('data').get('pk'))
+        pk_id = 0
+        if pk_id:
+            json_rsp = await self.user.req_s(PkRaffleHandlerReq.info, self.user, pk_id, self._room_id)
+            self.pk_end_time = json_rsp.get('data').get('pk_frozen_time') + DELAY
+            self.end = json_rsp.get('data').get('timestamp') > self.pk_end_time
+
+            init_info = json_rsp.get('data').get('init_info')
+            match_info = json_rsp.get('data').get('match_info')
+
+            if init_info.get('room_id') != self._room_id:
+                # 交换
+                init_info, match_info = match_info, init_info
+
+            if init_info.get('room_id') == self._room_id:
+                me_roomid, self.pk_me_votes, me_best = init_info.get(
+                    'room_id'), init_info.get('votes'), init_info.get('best_uname')
+                op_roomid, self.pk_op_votes, op_best = match_info.get(
+                    'room_id'), match_info.get('votes'), match_info.get('best_uname')
+                print(
+                    f'和对方差距{self.pk_op_votes-self.pk_me_votes}分, {self.pk_end_time-time.time()}s后结束')
+
+        ##
         # 笔芯 20014
         # await asyncio.sleep(3)
-
+        # return
         while(1):
             try:
                 if self.pk_end_time > time.time() or not self.end:

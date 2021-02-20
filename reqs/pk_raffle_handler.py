@@ -23,3 +23,9 @@ class PkRaffleHandlerReq:
         response = await user.bililive_session.request_json('POST', url, data=data,
                                                             headers=user.pc.headers)
         return response
+
+    @staticmethod
+    async def info(user, pk_id, room_id):
+        url = f'{API_LIVE}/av/v1/Battle/getInfoById?pk_id={pk_id}&roomid={room_id}&pk_version=2'
+        json_rsp = await user.bililive_session.request_json('GET', url, ctrl=ZERO_ONLY_CTRL)
+        return json_rsp
