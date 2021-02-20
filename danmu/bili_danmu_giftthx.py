@@ -117,6 +117,8 @@ class DanmuGiftThx(WsDanmuClient):
 
     async def run_fans(self):
         # 获取uid
+        print('直播间已经可以通知关注获取，使用新版本，以减少请求数量')
+        return
         json_rsp = await self.user.req_s(UtilsReq.get_room_info, self.user, self._room_id)
         uid = json_rsp.get('data', {}).get('uid', 0)
 
@@ -408,6 +410,19 @@ class DanmuGiftThx(WsDanmuClient):
                 pass
             elif cmd == 'PK_BATTLE_PRO_TYPE':
                 pass
+            elif cmd == 'INTERACT_WORD':
+                # 新关注，新入场
+                uid = data.get('data').get('uid')
+                uname = data.get('data').get('uname')
+                msg_type = data.get('data').get('msg_type')
+                if msg_type == 2 and self.user.focus_thx_format:
+                    # 新关注
+                    await self.send_danmu(self.user.focus_thx_format.format(username=uname, uid=uid,
+                                                                            random1=random.choice(
+                                                                                self.user.random_list_1),
+                                                                            random2=random.choice(
+                                                                                self.user.random_list_2),
+                                                                            random3=random.choice(self.user.random_list_3)))
             elif cmd == 'ANCHOR_LOT_AWARD':
                 if self.user.anchor_alert_format:
                     fstr = self.user.anchor_alert_format
