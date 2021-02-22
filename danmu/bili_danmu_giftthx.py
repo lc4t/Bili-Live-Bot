@@ -253,9 +253,9 @@ class DanmuGiftThx(WsDanmuClient):
         except:
             traceback.print_exc()
 
-    async def send_danmu(self, text, default_length=30, retry=5):
+    async def send_danmu(self, text, default_length=30, retry=1):
         # return
-        if retry < 0:
+        if retry <= 0:
             return
         now = datetime.datetime.now()
         print(f'try to send length@{len(text)}/{default_length}: {text}')
@@ -268,7 +268,7 @@ class DanmuGiftThx(WsDanmuClient):
         # open(f'log/{self._room_id}-{now.year}{now.month:02d}{now.day:02d}.log', 'a').write(text + '\n')
         # open(f'log/{self._room_id}-{now.year}{now.month:02d}{now.day:02d}.log', 'a').write(json.dumps(json_rsp)+'\n')
         if json_rsp.get('msg', '') == 'msg in 1s':
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(1)
             return await self.send_danmu(text, default_length, retry-1)
         elif json_rsp.get('msg', '') == '':
             pass
@@ -290,7 +290,7 @@ class DanmuGiftThx(WsDanmuClient):
 
         if len(text) > default_length:
             print(f'{text} --> 第二部分发出')
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(1)
             await self.send_danmu(text[default_length:], default_length, retry)
 
     async def game_log(self, coin_type, total_coin):
