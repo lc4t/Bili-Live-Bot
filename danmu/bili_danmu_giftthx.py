@@ -356,6 +356,7 @@ class DanmuGiftThx(WsDanmuClient):
             if len(check) > 0 and len(check[0])/len(danmu) >= percent:
                 json_rsp = await self.user.req_s(BanUserReq.ban_user, self.user, self._room_id, uid, int(hour))
                 print(json_rsp)
+                self.write_log(json.dumps(json_rsp, ensure_ascii=False))
                 return True
 
     async def handle_danmu(self, data: dict):
