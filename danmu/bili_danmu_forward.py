@@ -26,13 +26,13 @@ class DanmuForward(bili_danmu.WsDanmuClient):
     async def set_user(self, user):
         self.user = user
         self.GIFT_QUEUE = queue.Queue()
-        self.is_live = False
+        self.is_live = True
         self.qq_session = ''
         print(f'已关联用户{self.user.alias} -> {self._room_id}')
         await self._is_alive()
         print(self.user.tg_bot_token)
         self.bot = telepot.Bot(self.user.tg_bot_token)
-        self.last_leave_time = datetime.datetime.now() - datetime.timedelta(hours=99)  # 下播时间, 如果开播时间-下播时间在5min内，就不再提醒开播
+        self.last_leave_time = datetime.datetime.now()  # 下播时间, 如果开播时间-下播时间在5min内，就不再提醒开播
 
     async def _is_alive(self):
         json_rsp = await self.user.req_s(UtilsReq.init_room, self.user, self._room_id)
