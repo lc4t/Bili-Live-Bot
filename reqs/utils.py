@@ -257,7 +257,50 @@ class UtilsReq:
 
     
     @staticmethod
-    async def get_user_follower(user, uid):
-        url = f'https://api.bilibili.com/x/relation/followers?vmid={uid}&pn=1&ps=50&order=desc&jsonp=jsonp&callback='
+    async def get_user_follower(user, page=1):
+        uid = user.dict_user['uid']
+        url = f'https://api.bilibili.com/x/relation/followers?vmid={uid}&pn={page}&ps=50&order=desc&jsonp=jsonp&callback='
         json_rsp = await user.other_session.request_json('GET', url, headers=user.pc.headers)
         return json_rsp
+    
+    @staticmethod
+    async def get_user_bans(user, page=1):
+        url = f'https://api.bilibili.com/x/relation/blacks?re_version=0&pn={page}&ps=50&jsonp=jsonp'
+        json_rsp = await user.other_session.request_json('GET', url, headers=user.pc.headers)
+        return json_rsp
+
+
+
+
+    @staticmethod
+    async def black_user(user, uid):
+        url = 'https://api.bilibili.com/x/relation/modify'
+        payload = {
+            'fid': uid,
+            'act': 5,   # 拉黑
+            're_src': 11,
+            'jsonp': 'jsonp',
+            'csrf': user.dict_user['csrf']
+        }
+        json_rsp = await user.other_session.request_json('POST', url, data=payload, headers=user.pc.headers)
+        return json_rsp
+    
+    @staticmethod
+    async def unblack_user(user, uid):
+        url = 'https://api.bilibili.com/x/relation/modify'
+        payload = {
+            'fid': uid,
+            'act': 6,   # 解除拉黑
+            're_src': 11,
+            'jsonp': 'jsonp',
+            'csrf': user.dict_user['csrf']
+        }
+        json_rsp = await user.other_session.request_json('POST', url, data=payload, headers=user.pc.headers)
+        return json_rsp
+    
+    @staticmethod
+    async def my_info(user):
+        url = 'https://api.bilibili.com/x/space/myinfo?jsonp=jsonp&callback='
+        json_rsp = await user.other_session.request_json('GET', url, headers=user.pc.headers)
+        return json_rsp
+        # data.follower

@@ -25,7 +25,8 @@ from tasks.live_daily_job import (
 from tasks.main_daily_job import (
     JudgeCaseTask,
     BiliMainTask,
-    DahuiyuanTask
+    DahuiyuanTask,
+    BanQuietFans
 )
 from tasks.manga_daily_job import (
     ShareComicTask,
@@ -95,6 +96,8 @@ def add_daily_jobs():
     # bili_sched.add_daily_jobs(MangaSignTask, every_hours=6)
     # bili_sched.add_daily_jobs(ShareComicTask, every_hours=6)
     # bili_sched.add_daily_jobs(DahuiyuanTask, every_hours=6)
+    bili_sched.add_daily_jobs(BanQuietFans, every_hours=6)
+    
 
 
 add_daily_jobs()
@@ -151,20 +154,20 @@ default_roomid = other_control['default_monitor_roomid']
 #     return danmu_printer_, monitors_
 
 
-async def init_danmu_managers():
-    danmu_managers = []
-    # sender = []
-    for user in users.gets(-2):
-        for room in user.manage_room:
-            session = aiohttp.ClientSession()
-            danmu_ = DanmuGiftThx(
-                room_id=int(room),
-                area_id=-1,
-                session=session)
-            await danmu_.set_user(user)
-            danmu_managers.append(danmu_)
-    return danmu_managers
-danmu_manager = loop.run_until_complete(init_danmu_managers())
+# async def init_danmu_managers():
+#     danmu_managers = []
+#     # sender = []
+#     for user in users.gets(-2):
+#         for room in user.manage_room:
+#             session = aiohttp.ClientSession()
+#             danmu_ = DanmuGiftThx(
+#                 room_id=int(room),
+#                 area_id=-1,
+#                 session=session)
+#             await danmu_.set_user(user)
+#             danmu_managers.append(danmu_)
+#     return danmu_managers
+# danmu_manager = loop.run_until_complete(init_danmu_managers())
 
 # danmu_printer, monitors = loop.run_until_complete(init_monitors())
 ############################################################################
@@ -183,10 +186,10 @@ danmu_manager = loop.run_until_complete(init_danmu_managers())
 #     console_thread = None
 
 tasks = []
-tasks += [manager.run() for manager in danmu_manager]
-tasks += [s.run_sender() for s in danmu_manager]
-tasks += [s.run_alert() for s in danmu_manager]
-tasks += [s.run_fans() for s in danmu_manager]
+# tasks += [manager.run() for manager in danmu_manager]
+# tasks += [s.run_sender() for s in danmu_manager]
+# tasks += [s.run_alert() for s in danmu_manager]
+# tasks += [s.run_fans() for s in danmu_manager]
 # tasks += [s.run_medal_update() for s in danmu_manager]
 
 

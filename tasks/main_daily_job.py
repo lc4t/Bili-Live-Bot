@@ -1,9 +1,12 @@
 import random
+import traceback
 import asyncio
 from typing import Optional
+import datetime
 
 from reqs.utils import UtilsReq
 from reqs.main_daily_job import JudgeCaseReq, BiliMainReq, DahuiyuanReq
+from reqs.utils import UtilsReq
 from .base_class import Sched, DontWait, Unique
 
 
@@ -249,3 +252,91 @@ class DahuiyuanTask(Sched, DontWait, Unique):
             user.info('领取b币成功')
         else:
             user.info(f'领取b币可能重复 {json_rsp}')
+
+def write_log(text):
+    print(text)
+    open('ban.log', 'a').write(f'[{datetime.datetime.now()}]{text}\n')
+class BanQuietFans(Sched, DontWait, Unique):
+    TASK_NAME = 'banquietfans'
+
+    @staticmethod
+    async def check(_):
+        return (-2, (0, 30)),
+
+    @staticmethod
+    async def work(user):
+
+        # 获取当前粉丝列表、已拉黑的加入白名单
+
+        print('启动....')
+        white_list = set()
+        alreadyban_list = set()
+        # 全局开始遍历，从uid=1开始，跳过白黑
+        # 上次历史是user.start_uid
+        total = 9999
+        page = 1
+        try:
+            while(len(white_list) < total):
+                json_rsp = await user.req_s(UtilsReq.get_user_follower, user, page)
+                total = json_rsp.get('data').get('total')
+                now_fans = [i for i in json_rsp.get('data').get('list')]
+                if not now_fans:
+                    break
+            
+                white_list |= set([i.get('mid') for i in now_fans])
+                write_log(f'当前获取到白名单粉丝{len(white_list)}人，粉丝总数{total}')
+                page += 1
+            
+            page = 1
+            total = 9999
+            while(len(alreadyban_list) < total):
+                json_rsp = await user.req_s(UtilsReq.get_user_bans, user, page)
+                total = json_rsp.get('data').get('total')
+                now_bans = [i for i in json_rsp.get('data').get('list')]
+                if not now_bans:
+                    break
+            
+                alreadyban_list |= set([i.get('mid') for i in now_bans])
+                write_log(f'当前获取到已ban{len(now_bans)}人，已ban总数{total}')
+                if total == len(now_bans):
+                    break
+                page += 1
+
+            not_care = white_list | alreadyban_list
+            
+            # update_uid
+            # print('获取当前关注总数')
+            # json_rsp = await user.req_s(UtilsReq.my_info, user)
+            # old_fans_count = json_rsp.get('data').get('follower')
+            # 开始计算悄悄关注
+            while(1):
+                if user.start_uid in not_care:
+                    write_log(f'{user.start_uid}在白名单')
+                    user.start_uid += 1
+                    continue
+                # 拉黑1一个
+                print(f'test: {user.start_uid}')
+                json_rsp = await user.req_s(UtilsReq.black_user, user, user.start_uid)
+                
+
+                write_log(f'拉黑{user.start_uid}->{json_rsp}')
+                if json_rsp.get('code') == 22008:
+                    return 
+                # 取消拉黑
+                json_rsp = await user.req_s(UtilsReq.unblack_user, user, user.start_uid)
+                write_log(f'取消拉黑{user.start_uid}->{json_rsp}')
+                # 检查粉丝数
+                # json_rsp = await user.req_s(UtilsReq.my_info, user)
+                # new_fans_count = json_rsp.get('data').get('follower')
+                # if new_fans_count != old_fans_count:
+                #     write_log(f'粉丝数变化, {old_fans_count}->{new_fans_count}, uid={user.start_uid}')
+                
+                user.start_uid += 1
+                user.update_uid()
+                await asyncio.sleep(0.75)
+        
+            
+        except Exception as e:
+            print(e)
+            traceback.print_exc()
+

@@ -39,3 +39,4 @@ class BanUserReq:
         }
         json_rsp = await user.other_session.request_json('POST', url, data=data, headers=user.pc.headers)
         return json_rsp
+

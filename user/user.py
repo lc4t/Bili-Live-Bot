@@ -36,6 +36,9 @@ class User:
         'height', 'weight',
         'const_json', 'only_live_alert',
         'anchor_alert_format',
+
+        ## 
+        'start_uid',
     )
 
     def __init__(
@@ -49,25 +52,27 @@ class User:
         self.task_arrangement = task_arrangement
         self.is_in_jail = False  # 是否小黑屋
         ##
-        self.manage_room = dict_user['manage_room']
-        self.alerts = dict_user.get('alerts', [])
-        self.gift_comb_delay = dict_user['gift_comb_delay']
-        self.alert_second = dict_user['alert_second']
-        self.gift_thx_format = dict_user.get('gift_thx_format', '感谢{username}投喂的{giftname}x{num}')
-        self.silver_gift_thx_format = dict_user.get('silver_gift_thx_format', self.gift_thx_format)
-        self.gold_gift_thx_format = dict_user.get('gold_gift_thx_format', self.gift_thx_format)
-        self.focus_thx_format = dict_user['focus_thx_format']
-        self.guard_thx_format = dict_user.get('guard_thx_format', self.gift_thx_format)
-        self.danmu_length = dict_user.get('danmu_length', 30)
-        self.medal_update_format = dict_user.get('medal_update_format', '')
-        self.medal_update_check_delay = dict_user.get('medal_update_check_delay', 30)
-        self.only_live_thx = dict_user.get('only_live_thx', False)
-        self.only_live_alert = dict_user.get('only_live_alert', True)
-        self.anchor_alert_format = dict_user.get('anchor_alert_format', '')
-        self.reply = dict_user.get('reply', [])
-        self.ban = dict_user.get('ban', [])
-        self.height = dict_user.get('height', 0)
-        self.weight = dict_user.get('weight', 0)
+        # self.manage_room = dict_user['manage_room']
+        # self.alerts = dict_user.get('alerts', [])
+        # self.gift_comb_delay = dict_user['gift_comb_delay']
+        # self.alert_second = dict_user['alert_second']
+        # self.gift_thx_format = dict_user.get('gift_thx_format', '感谢{username}投喂的{giftname}x{num}')
+        # self.silver_gift_thx_format = dict_user.get('silver_gift_thx_format', self.gift_thx_format)
+        # self.gold_gift_thx_format = dict_user.get('gold_gift_thx_format', self.gift_thx_format)
+        # self.focus_thx_format = dict_user['focus_thx_format']
+        # self.guard_thx_format = dict_user.get('guard_thx_format', self.gift_thx_format)
+        # self.danmu_length = dict_user.get('danmu_length', 30)
+        # self.medal_update_format = dict_user.get('medal_update_format', '')
+        # self.medal_update_check_delay = dict_user.get('medal_update_check_delay', 30)
+        # self.only_live_thx = dict_user.get('only_live_thx', False)
+        # self.only_live_alert = dict_user.get('only_live_alert', True)
+        # self.anchor_alert_format = dict_user.get('anchor_alert_format', '')
+        # self.reply = dict_user.get('reply', [])
+        # self.ban = dict_user.get('ban', [])
+        # self.height = dict_user.get('height', 0)
+        # self.weight = dict_user.get('weight', 0)
+
+        self.start_uid = dict_user.get('start_uid', 1)
 
         if dict_user.get('const_json'):
             self.const_json = json.load(open(dict_user.get('const_json'), 'r'))
@@ -118,6 +123,8 @@ class User:
     def is_online(self):
         return self.pc.headers['cookie'] and self.app.headers['cookie'] and self.tv.headers['cookie']
 
+    def update_uid(self):
+        conf_loader.write_user({'start_uid': self.start_uid}, self.id)
     def update_log(self):
         conf_loader.write_user({'weight': self.weight, 'height': self.height}, self.id)
 
@@ -170,8 +177,10 @@ class User:
                         self.info('判定出现了登陆失败，已经处理')
                         await self._waiting_login
                 except exceptions.ForbiddenError:
-                    await asyncio.shield(self.force_sleep(3600))  # bili_sched.force_sleep
-                    await asyncio.sleep(3600)  # 有的function不受sched控制，主动sleep即可，不cancel原因是怕堵死一些协程
+                    print(403)
+                    await asyncio.sleep(30)
+                    # await asyncio.shield(self.force_sleep(301))  # bili_sched.force_sleep
+                    # await asyncio.sleep(301)  # 有的function不受sched控制，主动sleep即可，不cancel原因是怕堵死一些协程
             else:
                 await self._waiting_login
 
