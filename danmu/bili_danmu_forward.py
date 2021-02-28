@@ -8,6 +8,7 @@ import random
 import re
 import time
 import traceback
+import traceback
 
 import telepot
 from exceptions import ForbiddenError
@@ -210,7 +211,7 @@ class DanmuForward(bili_danmu.WsDanmuClient):
                 d = f'开播 {self._room_id}'
                 print(d)
                 delta = datetime.datetime.now() - self.last_leave_time
-                if not self.is_live and delta.total_seconds() > 60 * 5:
+                if not self.is_live and delta.total_seconds() > 60 * 3:
                     for group in self.user.at_all_group:
                         data = [
                             {"type": "AtAll"},
@@ -221,6 +222,7 @@ class DanmuForward(bili_danmu.WsDanmuClient):
                                 await self.send_message_qq(group, data)
                                 break
                             except:
+                                traceback.print_exc()
                                 await asyncio.sleep(1)
                                 continue
                         await asyncio.sleep(0.5)
