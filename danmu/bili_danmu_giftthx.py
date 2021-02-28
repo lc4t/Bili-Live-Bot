@@ -22,7 +22,7 @@ class DanmuGiftThx(bili_danmu.WsDanmuClient):
     async def set_user(self, user):
         self.user = user
         self.GIFT_QUEUE = queue.Queue()
-        self.is_live = False
+        self.is_live = True
         print(f'已关联用户{self.user.alias} -> {self._room_id}')
         await self._is_alive()
 
