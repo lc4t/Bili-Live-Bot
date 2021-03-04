@@ -369,13 +369,13 @@ class DanmuGiftThx(WsDanmuClient):
                         if self.pk_op_votes - self.pk_me_votes > self.user.pk_max_votes or self.pk_now_use > self.user.pk_max_votes:
                             # print('超额了', self.pk_op_votes - self.pk_me_votes, self.user.pk_max_votes, self.pk_now_use, self.user.pk_max_votes)
                             continue
-                        need = ((self.pk_op_votes-self.pk_me_votes)/self.user.pk_gift_rank)+3
+                        need = ((self.pk_op_votes-self.pk_me_votes)/self.user.pk_gift_rank)+1
                         gift_id = self.user.pk_gift_id
                         gift_num = need
                         print(f'赠送{need}个{self.user.pk_gift_id}')
                         # print(UtilsReq.send_gold, self.user, gift_id, gift_num, self._room_id, ruid)
                         self.pk_now_use += self.user.pk_gift_rank * need
-                        json_rsp = await self.user.req_s(UtilsReq.send_gold, self.user, gift_id, int(gift_num)+1, self._room_id, ruid)
+                        json_rsp = await self.user.req_s(UtilsReq.send_gold, self.user, gift_id, int(gift_num), self._room_id, ruid)
                         # status = json_rsp.get('data', {}).get('live_status')
                         print(json_rsp)
 
