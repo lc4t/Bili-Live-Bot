@@ -9,19 +9,21 @@ class PkRaffleHandlerReq:
     async def check(user, real_roomid):
         url = f'{API_LIVE}/xlive/lottery-interface/v1/lottery/Check?roomid={real_roomid}'
         json_rsp = await user.bililive_session.request_json('GET', url, ctrl=ZERO_ONLY_CTRL)
+        # data.pk[0].id
+        ##
         return json_rsp
 
     @staticmethod
-    async def join(user, real_roomid, raffle_id):
-        url = f"{API_LIVE}/xlive/lottery-interface/v1/pk/join"
+    async def join(user, real_roomid, pk_id):
+        url = f"{API_LIVE}/xlive/lottery-interface/v2/pk/join"
 
         data = {
             'roomid': real_roomid,
-            'id': raffle_id,
+            'id': pk_id,
+            'type': 'pk',
             'csrf_token': user.dict_user['csrf'],
             'csrf': user.dict_user['csrf'],
         }
-
         response = await user.bililive_session.request_json('POST', url, data=data,
                                                             headers=user.pc.headers)
         return response
@@ -36,7 +38,9 @@ class PkRaffleHandlerReq:
     async def init(user, room_id):
         url = f'https://live.bilibili.com/{room_id}'
         rsp = await user.bililive_session.request_text('GET', url)
-        check = re.findall(r',"battle_id":(\d+),', rsp)
+        # print(rsp)
+        check = re.findall(r'\{\"pk_id\"\:([0-9]+)\}', rsp)
+        # print(check)
         if check:
             return check[0]
         else:

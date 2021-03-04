@@ -67,8 +67,7 @@ users = loop.run_until_complete(init_users())
 # 时间间隔为小时，同时每次休眠结束都会计时归零，重新从当前时间计算时间间隔
 # 下面表示每隔多少小时执行一次
 def add_daily_jobs():
-    pass
-    # bili_sched.add_daily_jobs(HeartBeatTask, every_hours=6)
+    bili_sched.add_daily_jobs(HeartBeatTask, every_hours=6)
     # bili_sched.add_daily_jobs(OpenSilverBoxTask, every_hours=6)
     # bili_sched.add_daily_jobs(RecvDailyBagTask, every_hours=3)
     # bili_sched.add_daily_jobs(SignTask, every_hours=6)

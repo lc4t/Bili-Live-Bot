@@ -32,6 +32,7 @@ class DanmuGiftThx(WsDanmuClient):
         self.pk_me_votes = 0
         self.pk_op_votes = 0
         self.pk_now_use = 0
+        self.pk_id = 0
         print(f'已关联用户{self.user.alias} -> {self._room_id}')
         await self._is_alive()
 
@@ -326,15 +327,16 @@ class DanmuGiftThx(WsDanmuClient):
         # self.set_user()
         json_rsp = await self.user.req_s(UtilsReq.get_room_info, self.user, self._room_id)
         ruid = json_rsp.get('data', {}).get('uid', 0)
-
+        self.pk_id = 0
         if ruid == 0:
             print('获取uid失败，重启或检查房间号')
             return
 
         # 检查
         pk_id = await self.user.req_s(PkRaffleHandlerReq.init, self.user, self._room_id)
-        # print(json_rsp.get('data').get('pk'))
+        print(json_rsp.get('data').get('pk'))
         print(pk_id)
+        self.pk_id = pk_id
         # pk_id = 200887891
         if pk_id:
             json_rsp = await self.user.req_s(PkRaffleHandlerReq.info, self.user, pk_id, self._room_id)
@@ -358,10 +360,10 @@ class DanmuGiftThx(WsDanmuClient):
 
         while(1):
             try:
-                if self.pk_end_time > time.time() or not self.end:
+                if self.pk_end_time + 10 > time.time() or not self.end:
                     # print(
                     #     f'PK还有{self.pk_end_time - time.time()}s结束, 分差{self.pk_op_votes-self.pk_me_votes}')
-                    if self.pk_end_time - time.time() < 2.5 and self.pk_op_votes - self.pk_me_votes >= 0 and self.pk_end_time - time.time() > -10:
+                    if self.pk_end_time - time.time() < 3 and self.pk_op_votes - self.pk_me_votes >= 0 and self.pk_end_time - time.time() > -10:
                         # print(f'开启偷塔, 时限{self.pk_end_time - time.time()}')
                         # print(f'当前分差{self.pk_op_votes-self.pk_me_votes}')
                         if self.pk_op_votes - self.pk_me_votes > self.user.pk_max_votes or self.pk_now_use > self.user.pk_max_votes:
@@ -372,7 +374,7 @@ class DanmuGiftThx(WsDanmuClient):
                         gift_num = need
                         print(f'赠送{need}个{self.user.pk_gift_id}')
                         # print(UtilsReq.send_gold, self.user, gift_id, gift_num, self._room_id, ruid)
-                        self.pk_now_use += self.user.pk_gift_rank*need
+                        self.pk_now_use += self.user.pk_gift_rank * need
                         json_rsp = await self.user.req_s(UtilsReq.send_gold, self.user, gift_id, int(gift_num)+1, self._room_id, ruid)
                         # status = json_rsp.get('data', {}).get('live_status')
                         print(json_rsp)
@@ -382,7 +384,7 @@ class DanmuGiftThx(WsDanmuClient):
             except:
                 traceback.print_exc()
 
-            await asyncio.sleep(0.05)
+            await asyncio.sleep(0.00001)
 
     async def handle_danmu(self, data: dict):
         cmd = data['cmd']
@@ -433,6 +435,7 @@ class DanmuGiftThx(WsDanmuClient):
                 self.pk_op_votes = 0
 
                 pk_id = data.get('pk_id')
+                self.pk_id = pk_id
                 t = data.get('timestamp')
                 self.pk_end_time = data.get('data').get('pk_frozen_time') + DELAY
 
@@ -440,6 +443,7 @@ class DanmuGiftThx(WsDanmuClient):
                 print(data)
                 self.end = False
                 pk_id = data.get('pk_id')
+                self.pk_id = pk_id
                 t = data.get('timestamp')
                 # data = data.get('data')
 
@@ -467,6 +471,7 @@ class DanmuGiftThx(WsDanmuClient):
                 self.end = True
 
                 pk_id = data.get('pk_id')
+                self.pk_id = pk_id
                 t = data.get('timestamp')
 
                 init_info = data.get('data').get('init_info')
@@ -489,6 +494,14 @@ class DanmuGiftThx(WsDanmuClient):
             elif cmd in ['PK_BATTLE_SETTLE_USER', 'PK_BATTLE_SETTLE']:
                 self.end = True
                 print(data)
+                # 这里去领奖
+                # 出现领奖的时间
+                t = self.pk_end_time + 10 + 30
+                delta = t - time.time()
+                await asyncio.sleep(delta if delta > 0 else 0.1)
+                json_rsp = await self.user.req_s(PkRaffleHandlerReq.join, self.user, self._room_id, self.pk_id)
+                print(json_rsp)
+                #
             elif cmd == 'PK_BATTLE_PRO_TYPE':
                 print(data)
                 print('绝杀')
@@ -511,7 +524,8 @@ class DanmuGiftThx(WsDanmuClient):
                 'GUARD_LOTTERY_END', 'GUARD_MSG', 'USER_TOAST_MSG', 'SYS_MSG', 'COMBO_SEND', 'ROOM_BOX_USER',
                 'TV_START', 'TV_END', 'ANCHOR_LOT_END', 'ANCHOR_LOT_AWARD', 'ANCHOR_LOT_CHECKSTATUS',
                 'ANCHOR_LOT_STAR', 'ROOM_CHANGE', 'LIVE', 'new_anchor_reward', 'room_admin_entrance',
-                    'ROOM_ADMINS', 'PREPARING', 'INTERACT_WORD']:
+                    'ROOM_ADMINS', 'PREPARING', 'INTERACT_WORD', 'HOT_RANK_CHANGED', 'ONLINE_RANK_COUNT', 'WIDGET_BANNER',
+                    'ONLINE_RANK_V2', ]:
                 pass
             else:
                 print(data)
