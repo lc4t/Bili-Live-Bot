@@ -117,7 +117,7 @@ class DanmuGiftThx(WsDanmuClient):
 
     async def run_fans(self):
         # 获取uid
-        print('从WS中获取关注信号...)
+        print('从WS中获取关注信号...')
         return
         json_rsp = await self.user.req_s(UtilsReq.get_room_info, self.user, self._room_id)
         uid = json_rsp.get('data', {}).get('uid', 0)
