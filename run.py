@@ -85,7 +85,7 @@ def add_daily_jobs():
 add_daily_jobs()
 ############################################################################
 ############################################################################
-# loop.run_until_complete(notifier.exec_task(LoginTask))
+loop.run_until_complete(notifier.exec_task(LoginTask))
 
 other_control = dict_ctrl['other_control']
 area_ids = loop.run_until_complete(notifier.exec_func(UtilsTask.fetch_blive_areas))

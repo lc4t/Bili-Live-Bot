@@ -85,6 +85,7 @@ class UtilsReq:
     async def send_gold(user, gift_id, gift_num, room_id, ruid):
         # 金瓜子
         url = f'{API_LIVE}/gift/v2/Live/send'
+        # url = f'{API_LIVE}/xlive/revenue/v1/gift/sendGold'
         data = {
             'uid': user.dict_user['uid'],
             'gift_id': gift_id,

@@ -337,6 +337,7 @@ class DanmuGiftThx(WsDanmuClient):
         print(json_rsp.get('data').get('pk'))
         print(pk_id)
         self.pk_id = pk_id
+        self.battle_times = 0
         # pk_id = 200887891
         if pk_id:
             json_rsp = await self.user.req_s(PkRaffleHandlerReq.info, self.user, pk_id, self._room_id)
@@ -357,19 +358,25 @@ class DanmuGiftThx(WsDanmuClient):
                     'room_id'), match_info.get('votes'), match_info.get('best_uname')
                 print(
                     f'和对方差距{self.pk_op_votes-self.pk_me_votes}分, {self.pk_end_time-time.time()}s后结束')
+            self.battle_times = 0
 
         while(1):
             try:
                 if self.pk_end_time + 10 > time.time() or not self.end:
                     # print(
                     #     f'PK还有{self.pk_end_time - time.time()}s结束, 分差{self.pk_op_votes-self.pk_me_votes}')
-                    if self.pk_end_time - time.time() < 3 and self.pk_op_votes - self.pk_me_votes >= 0 and self.pk_end_time - time.time() > -10:
+                    if self.pk_end_time - time.time() < 1.5 and self.pk_op_votes - self.pk_me_votes >= 0 and self.pk_end_time - time.time() > -10:
                         # print(f'开启偷塔, 时限{self.pk_end_time - time.time()}')
                         # print(f'当前分差{self.pk_op_votes-self.pk_me_votes}')
                         if self.pk_op_votes - self.pk_me_votes > self.user.pk_max_votes or self.pk_now_use > self.user.pk_max_votes:
                             # print('超额了', self.pk_op_votes - self.pk_me_votes, self.user.pk_max_votes, self.pk_now_use, self.user.pk_max_votes)
                             continue
-                        need = ((self.pk_op_votes-self.pk_me_votes)/self.user.pk_gift_rank)+2
+                        need = int((self.pk_op_votes-self.pk_me_votes)/self.user.pk_gift_rank)
+                        if need == 0:
+                            need = 1
+
+                        need += self.battle_times
+                        self.battle_times += 1
                         gift_id = self.user.pk_gift_id
                         gift_num = need
                         print(f'赠送{need}个{self.user.pk_gift_id}')
@@ -377,6 +384,8 @@ class DanmuGiftThx(WsDanmuClient):
                         self.pk_now_use += self.user.pk_gift_rank * need
                         json_rsp = await self.user.req_s(UtilsReq.send_gold, self.user, gift_id, int(gift_num), self._room_id, ruid)
                         # status = json_rsp.get('data', {}).get('live_status')
+                        
+                        print(f'pktimes = {self.battle_times}')
                         print(json_rsp)
 
                         # continue
@@ -436,6 +445,7 @@ class DanmuGiftThx(WsDanmuClient):
 
                 pk_id = data.get('pk_id')
                 self.pk_id = pk_id
+                self.battle_times = 0
                 t = data.get('timestamp')
                 self.pk_end_time = data.get('data').get('pk_frozen_time') + DELAY
 
@@ -469,7 +479,7 @@ class DanmuGiftThx(WsDanmuClient):
                 print(data)
                 self.pk_now_use = 0
                 self.end = True
-
+                self.battle_times = 0
                 pk_id = data.get('pk_id')
                 self.pk_id = pk_id
                 t = data.get('timestamp')
@@ -525,7 +535,7 @@ class DanmuGiftThx(WsDanmuClient):
                 'TV_START', 'TV_END', 'ANCHOR_LOT_END', 'ANCHOR_LOT_AWARD', 'ANCHOR_LOT_CHECKSTATUS',
                 'ANCHOR_LOT_STAR', 'ROOM_CHANGE', 'LIVE', 'new_anchor_reward', 'room_admin_entrance',
                     'ROOM_ADMINS', 'PREPARING', 'INTERACT_WORD', 'HOT_RANK_CHANGED', 'ONLINE_RANK_COUNT', 'WIDGET_BANNER',
-                    'ONLINE_RANK_V2', ]:
+                    'ONLINE_RANK_V2', 'STOP_LIVE_ROOM_LIST']:
                 pass
             else:
                 print(data)
