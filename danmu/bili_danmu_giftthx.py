@@ -39,7 +39,7 @@ class DanmuGiftThx(WsDanmuClient):
     async def _is_alive(self):
         json_rsp = await self.user.req_s(UtilsReq.init_room, self.user, self._room_id)
         status = json_rsp.get('data', {}).get('live_status')
-        self.is_live = status
+        self.is_live = status in [True, 1]
         return self.is_live
 
     def write_log(self, text):
@@ -117,7 +117,7 @@ class DanmuGiftThx(WsDanmuClient):
 
     async def run_fans(self):
         # 获取uid
-        print('直播间已经可以通知关注获取，使用新版本，以减少请求数量')
+        print('从WS中获取关注信号...)
         return
         json_rsp = await self.user.req_s(UtilsReq.get_room_info, self.user, self._room_id)
         uid = json_rsp.get('data', {}).get('uid', 0)
@@ -158,6 +158,8 @@ class DanmuGiftThx(WsDanmuClient):
         wait_to_send_danmu = {}     # 礼物列表合并后的输出
         sem = asyncio.Semaphore(1)
         # print('-----run_sender')
+        if self.user.disable_gift_thx:
+            return
         try:
             while(1):
                 # 取出所有结果，添加到等待队列
@@ -467,7 +469,7 @@ class DanmuGiftThx(WsDanmuClient):
                 'ANCHOR_LOT_STAR', 'ROOM_CHANGE', 'LIVE', 'new_anchor_reward', 'room_admin_entrance',
                     'ROOM_ADMINS', 'PREPARING', 'INTERACT_WORD', 'WIDGET_BANNER', 'HOT_RANK_CHANGED',
                     'ONLINE_RANK_TOP3', 'ANCHOR_LOT_START', 'ANCHOR_LOT_CHECKSTATUS', 'HOT_RANK_SETTLEMENT',
-                    'PK_BATTLE_SETTLE_V2']:
+                    'PK_BATTLE_SETTLE_V2', 'STOP_LIVE_ROOM_LIST']:
                 pass
             else:
                 print(data)

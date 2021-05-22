@@ -31,7 +31,7 @@ class User:
         'danmu_length', 'random_list_1', 'random_list_2', 'random_list_3',
         'medal_update_format', 'medal_update_check_delay',
         'guard_thx_format', 'fans_check_delay', 'only_live_thx',
-        'silver_gift_thx_format', 'gold_gift_thx_format',
+        'silver_gift_thx_format', 'gold_gift_thx_format', 'disable_gift_thx',
         'reply', 'ban',
         'height', 'weight',
         'const_json', 'only_live_alert',
@@ -68,6 +68,7 @@ class User:
         self.ban = dict_user.get('ban', [])
         self.height = dict_user.get('height', 0)
         self.weight = dict_user.get('weight', 0)
+        self.disable_gift_thx = dict_user.get('disable_gift_thx', False)
 
         if dict_user.get('const_json'):
             self.const_json = json.load(open(dict_user.get('const_json'), 'r'))
