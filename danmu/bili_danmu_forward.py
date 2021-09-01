@@ -63,7 +63,7 @@ class DanmuForward(bili_danmu.WsDanmuClient):
         return data
 
     async def alert_top_live(self):
-        while(1):
+        while(self.user.top_live_delay):
             try:
                 data = await self.top_isalive()
             except ForbiddenError:
@@ -110,7 +110,7 @@ class DanmuForward(bili_danmu.WsDanmuClient):
         fname = f'log/{self._room_id}-{now.year}{now.month}{now.day}.log.json'
         open(fname, 'a').write(str(data) + '\n')
         try:
-            if cmd == 'DANMU_MSG':
+            if cmd.startswith('DANMU_MSG'):
 
                 flag = data['info'][0][9]  # 获取弹幕类型， 0为普通弹幕
                 info = data['info']
@@ -176,7 +176,7 @@ class DanmuForward(bili_danmu.WsDanmuClient):
             elif cmd in ['ONLINERANK', 'ONLINE_RANK_V2', 'PANEL', 'ROOM_RANK', 'ACTIVITY_BANNER_UPDATE_V2']:
                 # 直播公告
                 pass
-            elif cmd in ['NOTICE_MSG']:
+            elif cmd in ['NOTICE_MSG', 'USER_TOAST_MSG']:
                 # 礼物公告
                 pass
             elif cmd in ['ROOM_REAL_TIME_MESSAGE_UPDATE', 'ROOM_BANNER', 'WIDGET_BANNER', 'ONLINE_RANK_COUNT', 'ONLINE_RANK_TOP3', ]:
@@ -198,6 +198,8 @@ class DanmuForward(bili_danmu.WsDanmuClient):
             #     pass
             elif cmd in ['INTERACT_WORD']:
                 # 推广
+                pass
+            elif cmd in ['STOP_LIVE_ROOM_LIST']:
                 pass
             elif cmd in ['ENTRY_EFFECT']:
                 # {'cmd': 'ENTRY_EFFECT', 'data': {'id': 4, 'uid': 71401876, 'target_id': 514051814, 'mock_effect': 0, 'face': 'https://i0.hdslb.com/bfs/face/6f125a1cedcfa9fc12e87eb77a6c9d196e13c1e2.jpg', 'privilege_type': 3, 'copy_writing': '欢迎舰长 <%V-D-B%> 进入直播间', 'copy_color': '#ffffff', 'highlight_color': '#E6FF00', 'priority': 70, 'basemap_url': 'https://i0.hdslb.com/bfs/live/mlive/f34c7441cdbad86f76edebf74e60b59d2958f6ad.png', 'show_avatar': 1, 'effective_time': 2, 'web_basemap_url': '', 'web_effective_time': 0, 'web_effect_close': 0, 'web_close_time': 0, 'business': 1, 'copy_writing_v2': '欢迎舰长 <%V-D-B%> 进入直播间', 'icon_list': [], 'max_delay_time': 7}}
