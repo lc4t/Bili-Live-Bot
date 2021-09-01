@@ -182,6 +182,8 @@ class DanmuForward(bili_danmu.WsDanmuClient):
             elif cmd in ['ROOM_REAL_TIME_MESSAGE_UPDATE', 'ROOM_BANNER', 'WIDGET_BANNER', 'ONLINE_RANK_COUNT', 'ONLINE_RANK_TOP3', ]:
                 # 房间公告
                 pass
+            elif cmd in ['ANCHOR_LOT_AWARD', 'ANCHOR_LOT_END']:
+                pass
             elif cmd in ['HOT_RANK_SETTLEMENT', 'HOT_RANK_CHANGED']:
                 # 房间热度变化
                 pass
